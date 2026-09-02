@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CE 430 — Euler-Bernoulli Derivation</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ]
+  });"></script>
+</head>
+<body>
+<header class="site-nav">
+<nav>
+<span class="site-title">CE 430 — Indeterminate Structures</span>
+<a href="index.html">Home</a>
+<a href="materials.html">Materials</a>
+<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a>
+</nav>
+</header>
+
+<main>
+<h1>Euler-Bernoulli Beam Theory: the Missing Link</h1>
+<p class="subtitle">From the linear cross-section stress distribution to
+\(q(x) = \frac{d^2}{dx^2}(EI\,\frac{d^2v}{dx^2})\) &mdash; Section 1.4.2 companion</p>
+
+<p>In lecture we jump from &ldquo;plane sections remain plane&rdquo;
+straight to \(M = EI\,v''\). This page fills in every step of that
+jump.</p>
+
+<div class="step">
+<h2>Step 1 &mdash; Kinematics: plane sections remain plane</h2>
+<p>A cross-section at \(x\) rotates with the slope of the deflected
+axis but stays flat and perpendicular to it. A fiber at height \(y\)
+above the neutral axis therefore displaces axially by</p>
+$$u(x,y) = -y\,v'(x)$$
+<p>Differentiating along the beam gives the axial strain &mdash;
+<strong>linear in \(y\)</strong>:</p>
+$$\varepsilon_x(x,y) = \frac{\partial u}{\partial x} = -y\,v''(x)$$
+</div>
+
+<div class="step">
+<h2>Step 2 &mdash; Constitutive law: linear elasticity</h2>
+$$\sigma_x(x,y) = E\,\varepsilon_x = -E\,y\,v''(x)$$
+<p>So the stress is also linear over the depth: compression on one
+side of the neutral axis, tension on the other.</p>
+<figure>
+  <img src="assets/img/strain_stress.svg" alt="Cross-section with linear strain and stress distributions across the depth.">
+  <figcaption>Cross-section, strain, and stress &mdash; both are linear in \(y\).</figcaption>
+</figure>
+</div>
+
+<div class="step">
+<h2>Step 3 &mdash; Resultants: integrate the stress over the cross-section</h2>
+<p><strong>Axial force</strong> (must vanish for pure bending):</p>
+$$N(x) = \int_A \sigma_x\,dA = -E\,v''(x)\int_A y\,dA = 0 \;\;\Longrightarrow\;\; \int_A y\,dA = 0$$
+<p>This is <em>why</em> the neutral axis passes through the
+<strong>centroid</strong>. <strong>Bending moment</strong> (sagging
+positive):</p>
+$$M(x) = -\int_A y\,\sigma_x\,dA = E\,v''(x)\underbrace{\int_A y^2\,dA}_{I} = EI\,v''(x)$$
+<p class="caveat">The <strong>linear</strong> stress distribution is
+exactly what makes the moment proportional to curvature &mdash; and
+the constant of proportionality is \(EI\): \(E\) from the material,
+\(I = \int_A y^2\,dA\) from the cross-section geometry.</p>
+</div>
+
+<div class="step">
+<h2>Step 4 &mdash; Equilibrium of a differential element</h2>
+<figure>
+  <img src="assets/img/element_fbd.svg" alt="Free-body diagram of a differential beam element of length dx, showing q(x), V, V+dV, M, and M+dM.">
+  <figcaption>Free-body diagram of a differential beam element \(dx\).</figcaption>
+</figure>
+<p>Vertical force balance and moment balance about the right face
+(dropping the second-order term \(q\,dx\cdot dx/2\)):</p>
+$$\frac{dV}{dx} = q(x), \qquad \frac{dM}{dx} = V(x)$$
+</div>
+
+<div class="step">
+<h2>Step 5 &mdash; Combine: the beam equation</h2>
+$$q = \frac{dV}{dx} = \frac{d^2M}{dx^2} = \frac{d^2}{dx^2}\!\left(EI\,\frac{d^2v}{dx^2}\right)$$
+<p>which is Eq. (1.1) of the lecture notes. For constant \(EI\):</p>
+$$EI\,\frac{d^4v}{dx^4} = q(x)$$
+</div>
+
+<h2>The full chain at a glance</h2>
+<table class="summary-table">
+  <thead>
+    <tr><th>Quantity</th><th>Expression</th><th>Comes from</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>displacement</td><td>\(u = -y\,v'\)</td><td>plane sections (kinematics)</td></tr>
+    <tr><td>strain</td><td>\(\varepsilon_x = -y\,v''\)</td><td>derivative of \(u\)</td></tr>
+    <tr><td>stress</td><td>\(\sigma_x = -Ey\,v''\)</td><td>Hooke's law</td></tr>
+    <tr><td>moment</td><td>\(M = EI\,v''\)</td><td>\(-\int_A y\,\sigma_x\,dA\)</td></tr>
+    <tr><td>shear</td><td>\(V = EI\,v'''\)</td><td>\(dM/dx\) (element equilibrium)</td></tr>
+    <tr><td>load</td><td>\(q = EI\,v''''\)</td><td>\(dV/dx\) (element equilibrium)</td></tr>
+  </tbody>
+</table>
+<p class="caveat">Assumptions used, and where: plane sections &perp;
+axis (Step 1), linear elastic material (Step 2), small rotations
+throughout, constant \(EI\) only in the final simplification.</p>
+</main>
+
+<footer class="site-footer">
+CE 430, Fall 2026 — Washington State University
+</footer>
+</body>
+</html>

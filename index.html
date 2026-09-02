@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CE 430 — Course Home</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-nav">
+<nav>
+<span class="site-title">CE 430 — Indeterminate Structures</span>
+<a href="index.html">Home</a>
+<a href="materials.html">Materials</a>
+<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a>
+</nav>
+</header>
+
+<main>
+<h1>CE 430 — Indeterminate Structures</h1>
+<p class="subtitle">Fall 2026 &middot; Instructor: Dr. Haifeng Wang &middot; Department of Civil and Environmental Engineering, Washington State University</p>
+
+<p>Welcome! This is the course website for CE 430. Here you'll find the
+full course schedule, the syllabus, released lecture notes and
+homework sets, and standalone derivation pages that go deeper than
+what we have time to cover step-by-step in lecture.</p>
+
+<h2>Schedule</h2>
+<p class="schedule-note">(code) = coding homework; each one adds a stage to the <code>ce430</code> package.</p>
+<table class="schedule">
+  <thead>
+    <tr><th>Week</th><th>Date</th><th>Topic</th><th>HW assigned</th><th>HW due</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Mon 08/24</td><td>Introduction; syllabus; diagnostic quiz</td><td></td><td></td></tr>
+    <tr><td>1</td><td>Wed 08/26</td><td>Determinacy, indeterminacy, and stability</td><td></td><td></td></tr>
+    <tr><td>1</td><td>Fri 08/28</td><td>Idealization, superposition, free-body diagrams</td><td>HW1</td><td></td></tr>
+    <tr><td>2</td><td>Mon 08/31</td><td>Euler-Bernoulli beam theory</td><td></td><td></td></tr>
+    <tr><td>2</td><td>Wed 09/02</td><td>Internal forces, displacements, fixed-end moments</td><td></td><td></td></tr>
+    <tr><td>2</td><td>Fri 09/04</td><td>Force method; flexibility and stiffness coefficients</td><td>HW2</td><td></td></tr>
+    <tr><td>3</td><td>Mon 09/07</td><td>Labor Day — no class</td><td></td><td></td></tr>
+    <tr><td>3</td><td>Wed 09/09</td><td>Force method examples; deflection tables</td><td></td><td>HW1</td></tr>
+    <tr><td>3</td><td>Fri 09/11</td><td>Degrees of freedom; slope-deflection equations</td><td>HW3</td><td>HW2</td></tr>
+    <tr><td>4</td><td>Mon 09/14</td><td>Slope-deflection procedure; beam example</td><td></td><td></td></tr>
+    <tr><td>4</td><td>Wed 09/16</td><td>Slope-deflection for braced frames</td><td></td><td></td></tr>
+    <tr><td>4</td><td>Fri 09/18</td><td>Python and matrix computing; the ce430 package</td><td>HW4 (code)</td><td>HW3</td></tr>
+    <tr><td>5</td><td>Mon 09/21</td><td>Midterm 1 issued (take home); member stiffness matrix</td><td></td><td></td></tr>
+    <tr><td>5</td><td>Wed 09/23</td><td>Beam stiffness example: numbering and assembly</td><td></td><td></td></tr>
+    <tr><td>5</td><td>Fri 09/25</td><td>Direct stiffness procedure for beams</td><td>HW5</td><td>HW4 (code)</td></tr>
+    <tr><td>6</td><td>Mon 09/28</td><td>Compound beams and internal hinges</td><td></td><td></td></tr>
+    <tr><td>6</td><td>Wed 09/30</td><td>Plane frame member; local stiffness matrix</td><td></td><td></td></tr>
+    <tr><td>6</td><td>Fri 10/02</td><td>Transformation to global axes</td><td>HW6 (code)</td><td>HW5</td></tr>
+    <tr><td>7</td><td>Mon 10/05</td><td>Transformation practice; inclined members</td><td></td><td></td></tr>
+    <tr><td>7</td><td>Wed 10/07</td><td>Assembling the system stiffness matrix</td><td></td><td></td></tr>
+    <tr><td>7</td><td>Fri 10/09</td><td>Supports, constraints, and the partition method</td><td>HW7 (code)</td><td>HW6 (code)</td></tr>
+    <tr><td>8</td><td>Mon 10/12</td><td>Solving for displacements and reactions</td><td></td><td></td></tr>
+    <tr><td>8</td><td>Wed 10/14</td><td>Member end forces; shear and moment diagrams</td><td></td><td></td></tr>
+    <tr><td>8</td><td>Fri 10/16</td><td>Sparsity and node numbering</td><td>HW8</td><td></td></tr>
+    <tr><td>9</td><td>Mon 10/19</td><td>Constraint equations; settlement and inclined supports</td><td></td><td>HW7 (code)</td></tr>
+    <tr><td>9</td><td>Wed 10/21</td><td>Solver algorithm; checking commercial software</td><td></td><td></td></tr>
+    <tr><td>9</td><td>Fri 10/23</td><td>Member loads: fixed-end forces</td><td>HW9</td><td>HW8</td></tr>
+    <tr><td>10</td><td>Mon 10/26</td><td>Midterm 2 issued (take home); load superposition</td><td></td><td></td></tr>
+    <tr><td>10</td><td>Wed 10/28</td><td>Uniformly distributed member loads</td><td></td><td></td></tr>
+    <tr><td>10</td><td>Fri 10/30</td><td>Frame examples with member loads</td><td>HW10 (code)</td><td></td></tr>
+    <tr><td>11</td><td>Mon 11/02</td><td>Rotational releases: the four end cases</td><td></td><td>HW9</td></tr>
+    <tr><td>11</td><td>Wed 11/04</td><td>Fixed-pinned and pinned-fixed members</td><td></td><td></td></tr>
+    <tr><td>11</td><td>Fri 11/06</td><td>Truss elements; choosing the release case</td><td>HW11</td><td>HW10 (code)</td></tr>
+    <tr><td>12</td><td>Mon 11/09</td><td>Why nonlinear analysis; sources of nonlinearity</td><td></td><td></td></tr>
+    <tr><td>12</td><td>Wed 11/11</td><td>Veterans Day — no class</td><td></td><td></td></tr>
+    <tr><td>12</td><td>Fri 11/13</td><td>Geometric stiffness for trusses</td><td>HW12 (code)</td><td>HW11</td></tr>
+    <tr><td>13</td><td>Mon 11/16</td><td>Geometric stiffness for frames; buckling load</td><td></td><td></td></tr>
+    <tr><td>13</td><td>Wed 11/18</td><td>Newton-Raphson and incremental methods</td><td></td><td></td></tr>
+    <tr><td>13</td><td>Fri 11/20</td><td>P-Delta effects; plastic hinges and collapse</td><td></td><td>HW12 (code)</td></tr>
+    <tr><td>14</td><td>Mon 11/23</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
+    <tr><td>14</td><td>Wed 11/25</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
+    <tr><td>14</td><td>Fri 11/27</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
+    <tr><td>15</td><td>Mon 11/30</td><td>Coding workshop: full-frame analysis; 3D frames</td><td></td><td></td></tr>
+    <tr><td>15</td><td>Wed 12/02</td><td>Coding workshop: checking against software; non-prismatic</td><td></td><td></td></tr>
+    <tr><td>15</td><td>Fri 12/04</td><td>Exam strategy; point/complexity budgeting</td><td></td><td></td></tr>
+    <tr><td>16</td><td>Mon 12/07</td><td>Review: determinacy, force, slope-deflection</td><td></td><td></td></tr>
+    <tr><td>16</td><td>Wed 12/09</td><td>Review: stiffness method</td><td></td><td></td></tr>
+    <tr><td>16</td><td>Fri 12/11</td><td>Review: nonlinear analysis; last class</td><td></td><td></td></tr>
+    <tr><td>—</td><td>Wed 12/16</td><td>Final exam 08:00-10:00, closed book</td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<h2>Syllabus</h2>
+<p><a href="syllabus.html">View the course syllabus</a>.
+Canvas remains authoritative for assignment submissions.</p>
+
+<h2>Materials &amp; Topics</h2>
+<p>Released lecture notes and homework sets are on the
+<a href="materials.html">Materials</a> page. For a full derivation of
+the Euler&ndash;Bernoulli beam equation (the steps lecture moves
+through quickly), see the
+<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a> page.</p>
+</main>
+
+<footer class="site-footer">
+CE 430, Fall 2026 &mdash; Washington State University
+</footer>
+</body>
+</html>
