@@ -3,206 +3,538 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CE 430 — Slope-Deflection Method</title>
-<link rel="stylesheet" href="../../assets/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-  onload="renderMathInElement(document.body, {
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '\\(', right: '\\)', display: false}
-    ]
-  });"></script>
+<title>CE 430 — Beam Deflection &amp; Curvature (Interactive)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #6d0f22 0%, #981e32 55%, #b83a4e 100%);
+    min-height: 100vh;
+    color: #222;
+  }
+  header.hero-header {
+    text-align: center;
+    padding: 1.6rem 1.5rem 1rem;
+    color: #fff;
+  }
+  header.hero-header a.back-link {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 0.6rem;
+  }
+  header.hero-header a.back-link:hover { text-decoration: underline; }
+  header.hero-header h1 {
+    font-size: 1.7rem;
+    margin: 0 0 0.3rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  header.hero-header p.subtitle-hero {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0 auto;
+    max-width: 640px;
+  }
+  .main-container {
+    display: grid;
+    grid-template-columns: 2.1fr 1fr;
+    gap: 16px;
+    max-width: 1300px;
+    margin: 0 auto 2rem;
+    padding: 0 16px;
+  }
+  @media (max-width: 900px) {
+    .main-container { grid-template-columns: 1fr; }
+  }
+  .box {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    margin-bottom: 16px;
+  }
+  .box h2 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    color: #333;
+  }
+  canvas { display: block; width: 100%; background: #fbfaf8; border-radius: 8px; }
+  #beamCanvas { height: 320px; border: 1px solid #ddd; }
+  #curvCanvas { height: 160px; border: 1px solid #ddd; }
+  .caption {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 8px;
+    font-style: italic;
+  }
+  .intro {
+    color: #fff;
+    max-width: 900px;
+    margin: 0 auto 1.2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    padding: 0 16px;
+  }
+  .control-group {
+    margin: 10px 0;
+    font-size: 0.85rem;
+  }
+  .control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .control-group input[type="range"] { width: 100%; }
+  .control-group .val { font-weight: 400; color: #777; }
+  .end-group {
+    border: 1px solid #e2e2e2;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+  .end-group h3 {
+    margin: 0 0 6px;
+    font-size: 0.9rem;
+    color: var(--accent, #981e32);
+  }
+  select { width: 100%; padding: 3px; margin-bottom: 6px; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  button {
+    flex: 1;
+    background: #981e32;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.85; }
+  label.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    font-size: 0.85rem;
+    color: #333;
+    margin-top: 8px;
+  }
+  .legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: #666;
+    margin-top: 2px;
+  }
+  .legend-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #2b6cb0 0%, #f5f5f0 50%, #c0392b 100%);
+    margin-top: 4px;
+  }
+  footer.site-footer {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+    font-family: Arial, Helvetica, sans-serif;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    text-align: center;
+  }
+</style>
 </head>
 <body>
 <header class="hero-header">
 <a class="back-link" href="../../index.html">&larr; Back to CE 430 Home</a>
-<h1>The Slope-Deflection Method</h1>
-<p class="subtitle-hero">A displacement (stiffness) method: member end
-moments written directly in terms of joint rotations and
-displacements &mdash; Chapter 3 companion</p>
+<h1>Beam Deflection &amp; Curvature &mdash; Interactive</h1>
+<p class="subtitle-hero">Drag a load or move a support and watch a real,
+dynamically-integrated beam settle into its new shape.</p>
 </header>
 
-<main class="page-card">
-<div class="step">
-<h2>Motivation &mdash; why a displacement method?</h2>
-<p>The force method (Chapter 2) takes <strong>redundant forces</strong>
-as the unknowns: you remove enough restraints to make the structure
-determinate, solve a determinate primary structure, and enforce
-compatibility to recover the redundants. That works well when the
-degree of <em>static</em> indeterminacy is small.</p>
-<p>The slope-deflection method flips the unknowns: it takes
-<strong>joint displacements</strong> &mdash; rotations \(\theta\) and
-transverse displacements \(\Delta\) &mdash; as the primary unknowns.
-Member end moments are written directly as functions of these
-displacements (satisfying compatibility automatically), and the
-unknown displacements are solved from joint
-<strong>equilibrium</strong> equations. This is efficient when the
-degree of <em>kinematic</em> indeterminacy (the number of unknown
-displacements) is small &mdash; and it is the direct ancestor of the
-matrix stiffness method later in the course, where the same member
-equations become a member stiffness matrix.</p>
-</div>
+<p class="intro">This is a live physics simulation (not a canned
+animation): a beam is discretized into many small segments, each with
+mass, damping, and bending stiffness, and integrated forward in time.
+Apply a load, rotate or settle a support, and watch the beam actually
+respond &mdash; deform, overshoot a little, and settle &mdash; the same
+way a real member would. The slope-deflection method you're covering in
+class works with exactly these ingredients: end rotations, support
+settlement, and the moments they produce.</p>
 
-<div class="step">
-<h2>Member kinematics and sign convention</h2>
-<p>Consider a prismatic member of length \(L\), flexural rigidity
-\(EI\), running from end \(i\) to end \(j\). Its displaced state is
-fully described by four quantities: the end rotations
-\(\theta_i,\theta_j\) and the end transverse displacements
-\(\Delta_i,\Delta_j\) (measured perpendicular to the member's
-undeformed axis).</p>
-<p><strong>Sign convention:</strong> clockwise end rotations
-\(\theta_i,\theta_j\) are positive; \(\Delta_i,\Delta_j\) are positive
-in the same sense used to define the member's local transverse axis
-(shown as &ldquo;positive direction&rdquo; in the figure). The end
-<em>actions</em> follow the same convention: \(M_i,M_j\) are
-clockwise-positive moments <em>acting on the member</em>, and
-\(V_i,V_j\) are forces acting on the member in the positive
-transverse direction. The chord
-connecting the two displaced end points is rotated from the original
-member axis by the <strong>chord rotation</strong></p>
-$$\psi = \frac{\Delta_j - \Delta_i}{L}$$
-<figure>
-  <img src="../../assets/img/member_kinematics.svg" alt="Deformed beam member from i to j showing end rotations theta_i, theta_j (clockwise positive) and end transverse displacements Delta_i, Delta_j, with the straight chord and the positive-direction reference shown.">
-  <figcaption>Member kinematics: end rotations \(\theta_i,\theta_j\)
-  (clockwise positive, measured from the <em>undeformed</em> member
-  axis) and end displacements \(\Delta_i,\Delta_j\). The straight
-  chord is shown for reference &mdash; its rotation
-  \(\psi=(\Delta_j-\Delta_i)/L\) enters the equations as the
-  \(-3\psi\) term.</figcaption>
-</figure>
-<p class="caveat">Both end rotations are drawn with the <em>same</em>
-clockwise sense in the figure &mdash; that is what produces the
-S-shaped (inflected) elastic curve shown. This is a kinematic
-diagram only: the actual sign and magnitude of each \(\theta,\Delta\)
-in a real problem come out of solving the equilibrium equations.</p>
-</div>
+<div class="main-container">
+  <div>
+    <div class="box">
+      <h2>Beam &mdash; deformed shape, colored by curvature</h2>
+      <canvas id="beamCanvas"></canvas>
+      <div class="legend-bar"></div>
+      <div class="legend"><span>concave one way</span><span>straight</span><span>concave the other way</span></div>
+      <p class="caption">The deflected shape determines the curvature &mdash;
+      and curvature is what the member moments resist. Watch the color
+      flip between the support region and midspan under a uniform load:
+      that sign flip is real, not decorative.</p>
+    </div>
+    <div class="box">
+      <h2>Curvature &kappa;(x) along the span</h2>
+      <canvas id="curvCanvas"></canvas>
+      <p class="caption">Same coloring as the beam above, plotted as a
+      curve. Dashed line is &kappa;=0.</p>
+    </div>
+  </div>
 
-<div class="step">
-<h2>The slope-deflection equations</h2>
-<p>For a prismatic member with no member loads, the end moments are
-linear in the four kinematic quantities above. In terms of the chord
-rotation \(\psi=(\Delta_j-\Delta_i)/L\):</p>
-$$M_i = \frac{2EI}{L}\Big(2\theta_i + \theta_j - 3\psi\Big), \qquad
-M_j = \frac{2EI}{L}\Big(2\theta_j + \theta_i - 3\psi\Big)$$
-<p>Expanding \(\psi\) and collecting terms in \(\theta_i,\theta_j,
-\Delta_i,\Delta_j\) individually (the form used when assembling
-equilibrium equations):</p>
-$$M_i = \frac{2EI}{L}\left(2\theta_i + \theta_j
-  + \frac{3}{L}\Delta_i - \frac{3}{L}\Delta_j\right)$$
-$$M_j = \frac{2EI}{L}\left(\theta_i + 2\theta_j
-  + \frac{3}{L}\Delta_i - \frac{3}{L}\Delta_j\right)$$
-<p class="caveat">When a member also carries transverse load (a
-uniform load, a point load, &hellip;), each equation picks up an
-additional <strong>fixed-end moment</strong> term &mdash; see below.</p>
-</div>
+  <div>
+    <div class="box">
+      <h2>Loads</h2>
+      <div class="control-group">
+        <label>Point load P <span class="val" id="valP">0.0</span></label>
+        <input type="range" id="sliderP" min="-4" max="4" step="0.1" value="0">
+      </div>
+      <div class="control-group">
+        <label>P position (along span) <span class="val" id="valXP">50%</span></label>
+        <input type="range" id="sliderXP" min="0.05" max="0.95" step="0.01" value="0.5">
+      </div>
+      <div class="control-group">
+        <label>Uniform load w <span class="val" id="valW">0.0</span></label>
+        <input type="range" id="sliderW" min="-4" max="4" step="0.1" value="0">
+      </div>
+    </div>
 
-<div class="step">
-<h2>Member shears and the 4&times;4 stiffness matrix</h2>
-<p>The end shears follow from equilibrium of the member as a free
-body: taking moments about \(j\) gives \(V_i\), and \(\sum F_y=0\)
-gives \(V_j=-V_i\):</p>
-$$V_i = \frac{M_i+M_j}{L}, \qquad V_j = -V_i$$
-<p>Substituting the slope-deflection equations and collecting terms
-gives all four member-end actions as linear functions of all four
-end displacements:</p>
-$$M_i = \frac{2EI}{L}\Big(2\theta_i+\theta_j+\tfrac{3}{L}\Delta_i-\tfrac{3}{L}\Delta_j\Big)$$
-$$M_j = \frac{2EI}{L}\Big(\theta_i+2\theta_j+\tfrac{3}{L}\Delta_i-\tfrac{3}{L}\Delta_j\Big)$$
-$$V_i = \frac{2EI}{L}\Big(\tfrac{3}{L}\theta_i+\tfrac{3}{L}\theta_j+\tfrac{6}{L^2}\Delta_i-\tfrac{6}{L^2}\Delta_j\Big)$$
-$$V_j = \frac{2EI}{L}\Big(-\tfrac{3}{L}\theta_i-\tfrac{3}{L}\theta_j-\tfrac{6}{L^2}\Delta_i+\tfrac{6}{L^2}\Delta_j\Big)$$
-<p>which is exactly the member stiffness relation \([F]=[K][\Delta]\):</p>
-$$\begin{bmatrix}M_i\\M_j\\V_i\\V_j\end{bmatrix}
-= \frac{2EI}{L}
-\begin{bmatrix}
-2 & 1 & \dfrac{3}{L} & -\dfrac{3}{L} \\[4pt]
-1 & 2 & \dfrac{3}{L} & -\dfrac{3}{L} \\[4pt]
-\dfrac{3}{L} & \dfrac{3}{L} & \dfrac{6}{L^2} & -\dfrac{6}{L^2} \\[4pt]
--\dfrac{3}{L} & -\dfrac{3}{L} & -\dfrac{6}{L^2} & \dfrac{6}{L^2}
-\end{bmatrix}
-\begin{bmatrix}\theta_i\\\theta_j\\\Delta_i\\\Delta_j\end{bmatrix}$$
-<p>Reordering rows/columns to group each end's moment with its shear
-&mdash; \([M_i,V_i,M_j,V_j]\) against \([\theta_i,\Delta_i,\theta_j,
-\Delta_j]\) &mdash; gives the same matrix with rows and columns
-swapped into that order:</p>
-$$\begin{bmatrix}M_i\\V_i\\M_j\\V_j\end{bmatrix}
-= \frac{2EI}{L}
-\begin{bmatrix}
-2 & \dfrac{3}{L} & 1 & -\dfrac{3}{L} \\[4pt]
-\dfrac{3}{L} & \dfrac{6}{L^2} & \dfrac{3}{L} & -\dfrac{6}{L^2} \\[4pt]
-1 & \dfrac{3}{L} & 2 & -\dfrac{3}{L} \\[4pt]
--\dfrac{3}{L} & -\dfrac{6}{L^2} & -\dfrac{3}{L} & \dfrac{6}{L^2}
-\end{bmatrix}
-\begin{bmatrix}\theta_i\\\Delta_i\\\theta_j\\\Delta_j\end{bmatrix}$$
-<p class="caveat">This \(4\times4\) matrix <strong>is</strong> the
-member stiffness matrix used later in the direct stiffness method
-(Section 3.3) &mdash; slope-deflection derives it one member at a
-time; the matrix method assembles it into a global system.</p>
-</div>
+    <div class="box">
+      <h2>Support i (left)</h2>
+      <div class="end-group">
+        <select id="typeI">
+          <option value="fixed">Fixed</option>
+          <option value="pinned">Pinned</option>
+        </select>
+        <div class="control-group">
+          <label>Rotation &theta;<sub>i</sub> <span class="val" id="valThetaI">0.00</span></label>
+          <input type="range" id="sliderThetaI" min="-0.35" max="0.35" step="0.01" value="0">
+        </div>
+        <div class="control-group">
+          <label>Settlement &Delta;<sub>i</sub> <span class="val" id="valDeltaI">0.00</span></label>
+          <input type="range" id="sliderDeltaI" min="-0.15" max="0.15" step="0.005" value="0">
+        </div>
+      </div>
+      <h2>Support j (right)</h2>
+      <div class="end-group">
+        <select id="typeJ">
+          <option value="fixed">Fixed</option>
+          <option value="pinned">Pinned</option>
+        </select>
+        <div class="control-group">
+          <label>Rotation &theta;<sub>j</sub> <span class="val" id="valThetaJ">0.00</span></label>
+          <input type="range" id="sliderThetaJ" min="-0.35" max="0.35" step="0.01" value="0">
+        </div>
+        <div class="control-group">
+          <label>Settlement &Delta;<sub>j</sub> <span class="val" id="valDeltaJ">0.00</span></label>
+          <input type="range" id="sliderDeltaJ" min="-0.15" max="0.15" step="0.005" value="0">
+        </div>
+      </div>
+    </div>
 
-<div class="step">
-<h2>Fixed-end moments (FEM)</h2>
-<p>The slope-deflection equations above assume no load acts along the
-member span. When a member does carry load, each end develops an
-additional moment equal to the moment that would exist if <em>both</em>
-ends were fully fixed against rotation and translation &mdash; the
-<strong>fixed-end moment</strong>, \(FEM_i,FEM_j\) &mdash; and these
-add to the right-hand side of the \(M_i,M_j\) equations
-<em>with their signs</em>. The magnitudes of the two canonical cases
-every student should have memorized:</p>
-<table class="summary-table">
-  <thead>
-    <tr><th>Loading</th><th>\(FEM\) magnitude at each end</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Uniformly distributed load \(w\) over the full span</td>
-        <td>\(wL^2/12\)</td></tr>
-    <tr><td>Point load \(P\) at midspan</td><td>\(PL/8\)</td></tr>
-  </tbody>
-</table>
-<p><strong>Signs:</strong> under the clockwise-positive convention the
-two ends carry <em>opposite</em> signs. For a downward load on a
-horizontal span running left \(i\) to right \(j\):
-\(FEM_i = -\,wL^2/12\) and \(FEM_j = +\,wL^2/12\)
-(likewise \(\mp PL/8\)) &mdash; the fixed ends push back
-counterclockwise on the left and clockwise on the right.</p>
-<p>The full fixed-end-moment table (both ends fixed, one end pinned,
-partial/offset loads, etc.) is given in the lecture notes, Section
-3.2.1.</p>
+    <div class="box">
+      <div class="btn-row">
+        <button id="btnReset">Reset</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="chkSlow"> Slow motion</label>
+      <p class="caption" id="substepInfo"></p>
+    </div>
+  </div>
 </div>
-
-<div class="step">
-<h2>Procedure of the slope-deflection method</h2>
-<p><strong>1. Degrees of freedom (DOF).</strong> Label all supports
-and joints (nodes) to define spans. Draw the deflected shape to
-identify the number of DOFs &mdash; each node may have a linear
-displacement and/or an angular displacement. Assume unknown
-displacements act in the positive (clockwise-rotation) direction.</p>
-<p><strong>2. Slope-deflection equations.</strong> Relate internal
-moments at each node to the node displacements. Compute fixed-end
-moments (FEMs) for any loaded spans. Applying the slope-deflection
-equations generates two equations per interior (fixed&ndash;fixed)
-span, or one equation per span ending in a pin support
-(fixed&ndash;pin). (The one-equation shortcut applies when the end
-pin or roller genuinely <em>releases</em> the member-end moment
-&mdash; set that end moment to zero and eliminate its rotation. An
-<em>interior</em> support of a continuous beam still transmits moment
-and keeps two equations per span.)</p>
-<p><strong>3. Equilibrium equations.</strong> Write one equilibrium
-equation per unknown DOF, expressed in terms of the moments from step
-2. Solve for the unknown displacements, then substitute back into the
-slope-deflection equations to recover the member end moments.</p>
-</div>
-
-<p class="caveat">This is worked end-to-end in class with a full
-example &mdash; bring the lecture notes, pp.&nbsp;48&ndash;56. The
-steps above set up every equation you need; the live derivation in
-lecture walks through solving them for a specific frame.</p>
-</main>
 
 <footer class="site-footer">
 CE 430, Fall 2026 — Washington State University
 </footer>
+
+<script src="beam_solver.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const solver = new BeamSolver({ N: 60, L: 1, EI: 1, mLin: 1, zeta: 0.09 });
+  solver.setBoundary({ type: 'fixed', theta: 0, delta: 0 }, { type: 'fixed', theta: 0, delta: 0 });
+  solver.snapBoundary();
+
+  const beamCanvas = document.getElementById('beamCanvas');
+  const curvCanvas = document.getElementById('curvCanvas');
+  const beamCtx = beamCanvas.getContext('2d');
+  const curvCtx = curvCanvas.getContext('2d');
+
+  function fitCanvas(c) {
+    const rect = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    c.width = Math.max(200, rect.width * dpr);
+    c.height = Math.max(120, rect.height * dpr);
+    return dpr;
+  }
+
+  const ui = {
+    P: document.getElementById('sliderP'),
+    xP: document.getElementById('sliderXP'),
+    w: document.getElementById('sliderW'),
+    typeI: document.getElementById('typeI'),
+    thetaI: document.getElementById('sliderThetaI'),
+    deltaI: document.getElementById('sliderDeltaI'),
+    typeJ: document.getElementById('typeJ'),
+    thetaJ: document.getElementById('sliderThetaJ'),
+    deltaJ: document.getElementById('sliderDeltaJ'),
+    slow: document.getElementById('chkSlow'),
+    reset: document.getElementById('btnReset'),
+  };
+  const out = {
+    P: document.getElementById('valP'),
+    xP: document.getElementById('valXP'),
+    w: document.getElementById('valW'),
+    thetaI: document.getElementById('valThetaI'),
+    deltaI: document.getElementById('valDeltaI'),
+    thetaJ: document.getElementById('valThetaJ'),
+    deltaJ: document.getElementById('valDeltaJ'),
+    substep: document.getElementById('substepInfo'),
+  };
+
+  function updateThetaEnabled() {
+    ui.thetaI.disabled = ui.typeI.value !== 'fixed';
+    ui.thetaJ.disabled = ui.typeJ.value !== 'fixed';
+    if (ui.typeI.value !== 'fixed') { ui.thetaI.value = 0; out.thetaI.textContent = '0.00'; }
+    if (ui.typeJ.value !== 'fixed') { ui.thetaJ.value = 0; out.thetaJ.textContent = '0.00'; }
+  }
+
+  function readControls() {
+    const P = parseFloat(ui.P.value);
+    const xP = parseFloat(ui.xP.value) * solver.L;
+    const w = parseFloat(ui.w.value);
+    out.P.textContent = P.toFixed(1);
+    out.xP.textContent = Math.round(parseFloat(ui.xP.value) * 100) + '%';
+    out.w.textContent = w.toFixed(1);
+    solver.setLoad({ P, xP, w });
+
+    const thetaI = parseFloat(ui.thetaI.value);
+    const deltaI = parseFloat(ui.deltaI.value);
+    const thetaJ = parseFloat(ui.thetaJ.value);
+    const deltaJ = parseFloat(ui.deltaJ.value);
+    out.thetaI.textContent = thetaI.toFixed(2);
+    out.deltaI.textContent = deltaI.toFixed(2);
+    out.thetaJ.textContent = thetaJ.toFixed(2);
+    out.deltaJ.textContent = deltaJ.toFixed(2);
+
+    solver.setBoundary(
+      { type: ui.typeI.value, theta: thetaI, delta: deltaI },
+      { type: ui.typeJ.value, theta: thetaJ, delta: deltaJ }
+    );
+  }
+
+  [ui.P, ui.xP, ui.w, ui.thetaI, ui.deltaI, ui.thetaJ, ui.deltaJ].forEach((el) =>
+    el.addEventListener('input', readControls)
+  );
+  [ui.typeI, ui.typeJ].forEach((el) =>
+    el.addEventListener('change', () => {
+      updateThetaEnabled();
+      readControls();
+    })
+  );
+  ui.reset.addEventListener('click', () => {
+    ui.P.value = 0; ui.xP.value = 0.5; ui.w.value = 0;
+    ui.typeI.value = 'fixed'; ui.thetaI.value = 0; ui.deltaI.value = 0;
+    ui.typeJ.value = 'fixed'; ui.thetaJ.value = 0; ui.deltaJ.value = 0;
+    updateThetaEnabled();
+    readControls();
+    solver.v.fill(0);
+    solver.vel.fill(0);
+  });
+
+  // Diverging color scale for curvature: blue (one sense) - near-white
+  // (straight) - red (opposite sense), auto-scaled to the current max
+  // |curvature| along the span each frame.
+  function curvColor(kappa, kMax) {
+    const t = kMax > 1e-9 ? Math.max(-1, Math.min(1, kappa / kMax)) : 0;
+    let r, g, b;
+    if (t >= 0) {
+      r = 245 + t * (192 - 245);
+      g = 245 + t * (57 - 245);
+      b = 240 + t * (42 - 240);
+    } else {
+      const u = -t;
+      r = 245 + u * (43 - 245);
+      g = 245 + u * (108 - 245);
+      b = 240 + u * (176 - 240);
+    }
+    return `rgb(${r | 0},${g | 0},${b | 0})`;
+  }
+
+  function drawSupport(ctx, x, y, type, mirrored) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = '#444';
+    ctx.fillStyle = '#444';
+    ctx.lineWidth = 2;
+    if (type === 'pinned') {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-10, 18);
+      ctx.lineTo(10, 18);
+      ctx.closePath();
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      const dx = mirrored ? -1 : 1;
+      ctx.moveTo(0, -14);
+      ctx.lineTo(0, 14);
+      for (let i = -14; i <= 14; i += 7) {
+        ctx.moveTo(0, i);
+        ctx.lineTo(dx * 10, i + 5);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw() {
+    const dprB = fitCanvas(beamCanvas);
+    const dprC = fitCanvas(curvCanvas);
+    const W = beamCanvas.width, H = beamCanvas.height;
+    beamCtx.clearRect(0, 0, W, H);
+
+    const marginX = 60 * dprB, marginY = 40 * dprB;
+    const plotW = W - 2 * marginX, plotH = H - 2 * marginY;
+    const vScale = plotH / 2 / 0.45; // solver v-units -> px; 0.45 gives headroom above the ~0.40 max observed in stress-testing every slider at its extreme simultaneously
+    const xToPx = (x) => marginX + (x / solver.L) * plotW;
+    const vToPx = (v) => marginY + plotH / 2 + v * vScale;
+
+    // reference datum + chord
+    beamCtx.strokeStyle = '#bbb';
+    beamCtx.setLineDash([4 * dprB, 4 * dprB]);
+    beamCtx.lineWidth = 1;
+    beamCtx.beginPath();
+    beamCtx.moveTo(xToPx(0), vToPx(solver.v[0]));
+    beamCtx.lineTo(xToPx(solver.L), vToPx(solver.v[solver.N]));
+    beamCtx.stroke();
+    beamCtx.setLineDash([]);
+
+    // curvature-colored beam as a sequence of short segments
+    const kappa = solver.curvature();
+    let kMax = 1e-6;
+    for (let k = 0; k <= solver.N; k++) kMax = Math.max(kMax, Math.abs(kappa[k]));
+
+    beamCtx.lineWidth = 6 * dprB;
+    beamCtx.lineCap = 'round';
+    for (let k = 0; k < solver.N; k++) {
+      const x0 = (k * solver.L) / solver.N, x1 = ((k + 1) * solver.L) / solver.N;
+      const kAvg = (kappa[k] + kappa[k + 1]) / 2;
+      beamCtx.strokeStyle = curvColor(kAvg, kMax);
+      beamCtx.beginPath();
+      beamCtx.moveTo(xToPx(x0), vToPx(solver.v[k]));
+      beamCtx.lineTo(xToPx(x1), vToPx(solver.v[k + 1]));
+      beamCtx.stroke();
+    }
+
+    // end tangent indicators (make theta, psi visible)
+    beamCtx.strokeStyle = '#333';
+    beamCtx.lineWidth = 1.5 * dprB;
+    const tanLen = 0.09 * solver.L;
+    beamCtx.beginPath();
+    beamCtx.moveTo(xToPx(0), vToPx(solver.v[0] - tanLen * solver.endI.theta));
+    beamCtx.lineTo(xToPx(tanLen), vToPx(solver.v[0] + tanLen * solver.endI.theta));
+    beamCtx.moveTo(xToPx(solver.L - tanLen), vToPx(solver.v[solver.N] - tanLen * solver.endJ.theta));
+    beamCtx.lineTo(xToPx(solver.L), vToPx(solver.v[solver.N] + tanLen * solver.endJ.theta));
+    beamCtx.stroke();
+
+    // supports
+    drawSupport(beamCtx, xToPx(0), vToPx(solver.v[0]), solver.endI.type, false);
+    drawSupport(beamCtx, xToPx(solver.L), vToPx(solver.v[solver.N]), solver.endJ.type, true);
+
+    // point load arrow
+    if (Math.abs(solver.P) > 1e-6) {
+      const xp = solver.xP;
+      const kp = Math.round(xp / solver.h);
+      const vAt = solver.v[kp];
+      const dir = solver.P > 0 ? 1 : -1;
+      const len = 26 * dprB;
+      beamCtx.strokeStyle = '#1a7f37';
+      beamCtx.fillStyle = '#1a7f37';
+      beamCtx.lineWidth = 2.5 * dprB;
+      const y0 = vToPx(vAt) - dir * len;
+      const y1 = vToPx(vAt) - dir * 4;
+      beamCtx.beginPath();
+      beamCtx.moveTo(xToPx(xp), y0);
+      beamCtx.lineTo(xToPx(xp), y1);
+      beamCtx.moveTo(xToPx(xp) - 5, y1 - dir * 7);
+      beamCtx.lineTo(xToPx(xp), y1);
+      beamCtx.lineTo(xToPx(xp) + 5, y1 - dir * 7);
+      beamCtx.stroke();
+    }
+
+    // uniform load arrows
+    if (Math.abs(solver.w) > 1e-6) {
+      const dir = solver.w > 0 ? 1 : -1;
+      beamCtx.strokeStyle = '#1a7f37';
+      beamCtx.lineWidth = 1.5 * dprB;
+      for (let f = 0.08; f <= 0.92; f += 0.12) {
+        const x = f * solver.L;
+        const k = Math.round(x / solver.h);
+        const vAt = solver.v[k];
+        const y0 = vToPx(vAt) - dir * 16 * dprB;
+        const y1 = vToPx(vAt) - dir * 3;
+        beamCtx.beginPath();
+        beamCtx.moveTo(xToPx(x), y0);
+        beamCtx.lineTo(xToPx(x), y1);
+        beamCtx.moveTo(xToPx(x) - 3, y1 - dir * 5);
+        beamCtx.lineTo(xToPx(x), y1);
+        beamCtx.lineTo(xToPx(x) + 3, y1 - dir * 5);
+        beamCtx.stroke();
+      }
+    }
+
+    // --- curvature plot ---
+    const Wc = curvCanvas.width, Hc = curvCanvas.height;
+    curvCtx.clearRect(0, 0, Wc, Hc);
+    const mX = 40 * dprC, mY = 16 * dprC;
+    const pW = Wc - 2 * mX, pH = Hc - 2 * mY;
+    const xToPxC = (x) => mX + (x / solver.L) * pW;
+    const kToPxC = (kv) => mY + pH / 2 - (kv / kMax) * (pH / 2 - 6 * dprC);
+
+    curvCtx.strokeStyle = '#bbb';
+    curvCtx.setLineDash([4 * dprC, 4 * dprC]);
+    curvCtx.beginPath();
+    curvCtx.moveTo(mX, mY + pH / 2);
+    curvCtx.lineTo(mX + pW, mY + pH / 2);
+    curvCtx.stroke();
+    curvCtx.setLineDash([]);
+
+    curvCtx.lineWidth = 3 * dprC;
+    for (let k = 0; k < solver.N; k++) {
+      const x0 = (k * solver.L) / solver.N, x1 = ((k + 1) * solver.L) / solver.N;
+      const kAvg = (kappa[k] + kappa[k + 1]) / 2;
+      curvCtx.strokeStyle = curvColor(kAvg, kMax);
+      curvCtx.beginPath();
+      curvCtx.moveTo(xToPxC(x0), kToPxC(kappa[k]));
+      curvCtx.lineTo(xToPxC(x1), kToPxC(kappa[k + 1]));
+      curvCtx.stroke();
+    }
+  }
+
+  let lastT = null;
+  function frame(t) {
+    if (lastT === null) lastT = t;
+    let dt = (t - lastT) / 1000;
+    lastT = t;
+    dt = Math.min(dt, 1 / 20); // clamp huge gaps (tab switch, etc.)
+    if (ui.slow.checked) dt *= 0.2;
+    const nSub = solver.advance(dt);
+    out.substep.textContent = nSub + ' physics substeps this frame (dt=' +
+      solver.stableDt().toExponential(2) + 's each, stability-limited by EI/h^4)';
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  updateThetaEnabled();
+  readControls();
+  window.addEventListener('resize', draw);
+  requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>

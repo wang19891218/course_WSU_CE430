@@ -34,11 +34,23 @@ index.html                          Landing page (ce512-style: animated
                                      gradient background, drifting
                                      equations, chapter sections of cards)
 chapter_1/euler_bernoulli/index.html   Euler-Bernoulli derivation (KaTeX, 2 SVGs)
-chapter_3/slope_deflection/index.html  Slope-deflection method (KaTeX, 1 SVG)
-assets/style.css                    Shared chrome for content pages
-                                     (gradient body, header/back-link,
-                                     white "page-card" wrapper)
-assets/img/                         SVG figures for the content pages
+chapter_3/slope_deflection/index.html  Beam deflection & curvature: an
+                                     interactive physics animation
+                                     (canvas + vanilla JS, no equations
+                                     or derivation text -- deliberately
+                                     NOT a copy of the lecture notes)
+chapter_3/slope_deflection/beam_solver.js  Standalone dynamic
+                                     Euler-Bernoulli beam solver (no DOM
+                                     dependency) used by the page above
+assets/style.css                    Shared chrome for the derivation-
+                                     style content pages (gradient
+                                     body, header/back-link, white
+                                     "page-card" wrapper); the
+                                     animation page has its own inline
+                                     dashboard-style CSS instead, since
+                                     it is a canvas UI, not an article
+assets/img/                         SVG figures for the derivation-
+                                     style content pages
 .nojekyll                           Disables Jekyll processing
 CNAME                               Custom domain for GitHub Pages
 ```
@@ -46,9 +58,20 @@ CNAME                               Custom domain for GitHub Pages
 Each content page keeps a `&larr; Back to CE 430 Home` link in its
 header instead of a shared nav bar, matching the ce512 subpage
 convention. To add a new chapter page: create
-`chapter_N/<topic>/index.html` following the pattern of the two
-existing pages (hero header + `<main class="page-card">`), then add
-one `module-card` entry to `index.html` linking to it.
+`chapter_N/<topic>/index.html` following the pattern of the existing
+pages (hero header + either `<main class="page-card">` for an
+article, or an inline dashboard-style `<style>` block for an
+interactive simulation), then add one `module-card` entry to
+`index.html` linking to it.
+
+**Rule of thumb for what belongs in `chapter_N/`:** interactive
+demonstrations of the underlying physics/mechanics (animations,
+simulations, derivations of *general* results) -- never a rendering
+of the specific worked examples or procedure the instructor covers
+live in class. The slope-deflection page, for instance, animates beam
+deflection and curvature generically; it does not show the
+slope-deflection equations or work through an example, both of which
+stay in the lecture notes and in class.
 
 ## Analytics (open item)
 
