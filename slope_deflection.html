@@ -63,15 +63,22 @@ undeformed axis).</p>
 <p><strong>Sign convention:</strong> clockwise end rotations
 \(\theta_i,\theta_j\) are positive; \(\Delta_i,\Delta_j\) are positive
 in the same sense used to define the member's local transverse axis
-(shown as &ldquo;positive direction&rdquo; in the figure). The chord
+(shown as &ldquo;positive direction&rdquo; in the figure). The end
+<em>actions</em> follow the same convention: \(M_i,M_j\) are
+clockwise-positive moments <em>acting on the member</em>, and
+\(V_i,V_j\) are forces acting on the member in the positive
+transverse direction. The chord
 connecting the two displaced end points is rotated from the original
 member axis by the <strong>chord rotation</strong></p>
 $$\psi = \frac{\Delta_j - \Delta_i}{L}$$
 <figure>
   <img src="assets/img/member_kinematics.svg" alt="Deformed beam member from i to j showing end rotations theta_i, theta_j (clockwise positive) and end transverse displacements Delta_i, Delta_j, with the straight chord and the positive-direction reference shown.">
   <figcaption>Member kinematics: end rotations \(\theta_i,\theta_j\)
-  (clockwise positive) and end displacements \(\Delta_i,\Delta_j\),
-  measured against the straight chord.</figcaption>
+  (clockwise positive, measured from the <em>undeformed</em> member
+  axis) and end displacements \(\Delta_i,\Delta_j\). The straight
+  chord is shown for reference &mdash; its rotation
+  \(\psi=(\Delta_j-\Delta_i)/L\) enters the equations as the
+  \(-3\psi\) term.</figcaption>
 </figure>
 <p class="caveat">Both end rotations are drawn with the <em>same</em>
 clockwise sense in the figure &mdash; that is what produces the
@@ -148,11 +155,12 @@ member span. When a member does carry load, each end develops an
 additional moment equal to the moment that would exist if <em>both</em>
 ends were fully fixed against rotation and translation &mdash; the
 <strong>fixed-end moment</strong>, \(FEM_i,FEM_j\) &mdash; and these
-simply add to the right-hand side of the \(M_i,M_j\) equations. The
-two canonical cases every student should have memorized:</p>
+add to the right-hand side of the \(M_i,M_j\) equations
+<em>with their signs</em>. The magnitudes of the two canonical cases
+every student should have memorized:</p>
 <table class="summary-table">
   <thead>
-    <tr><th>Loading</th><th>\(FEM\) at each end</th></tr>
+    <tr><th>Loading</th><th>\(FEM\) magnitude at each end</th></tr>
   </thead>
   <tbody>
     <tr><td>Uniformly distributed load \(w\) over the full span</td>
@@ -160,6 +168,12 @@ two canonical cases every student should have memorized:</p>
     <tr><td>Point load \(P\) at midspan</td><td>\(PL/8\)</td></tr>
   </tbody>
 </table>
+<p><strong>Signs:</strong> under the clockwise-positive convention the
+two ends carry <em>opposite</em> signs. For a downward load on a
+horizontal span running left \(i\) to right \(j\):
+\(FEM_i = -\,wL^2/12\) and \(FEM_j = +\,wL^2/12\)
+(likewise \(\mp PL/8\)) &mdash; the fixed ends push back
+counterclockwise on the left and clockwise on the right.</p>
 <p>The full fixed-end-moment table (both ends fixed, one end pinned,
 partial/offset loads, etc.) is given in the lecture notes, Section
 3.2.1.</p>
@@ -177,7 +191,11 @@ moments at each node to the node displacements. Compute fixed-end
 moments (FEMs) for any loaded spans. Applying the slope-deflection
 equations generates two equations per interior (fixed&ndash;fixed)
 span, or one equation per span ending in a pin support
-(fixed&ndash;pin).</p>
+(fixed&ndash;pin). (The one-equation shortcut applies when the end
+pin or roller genuinely <em>releases</em> the member-end moment
+&mdash; set that end moment to zero and eliminate its rotation. An
+<em>interior</em> support of a continuous beam still transmits moment
+and keeps two equations per span.)</p>
 <p><strong>3. Equilibrium equations.</strong> Write one equilibrium
 equation per unknown DOF, expressed in terms of the moments from step
 2. Solve for the unknown displacements, then substitute back into the
