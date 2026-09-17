@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CE 430 — Slope-Deflection Method</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ]
+  });"></script>
+</head>
+<body>
+<header class="site-nav">
+<nav>
+<span class="site-title">CE 430 — Indeterminate Structures</span>
+<a href="index.html">Home</a>
+<a href="materials.html">Materials</a>
+<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a>
+<a href="slope_deflection.html">Slope-Deflection Method</a>
+</nav>
+</header>
+
+<main>
+<h1>The Slope-Deflection Method</h1>
+<p class="subtitle">A displacement (stiffness) method: member end
+moments written directly in terms of joint rotations and
+displacements &mdash; Chapter 3 companion</p>
+
+<div class="step">
+<h2>Motivation &mdash; why a displacement method?</h2>
+<p>The force method (Chapter 2) takes <strong>redundant forces</strong>
+as the unknowns: you remove enough restraints to make the structure
+determinate, solve a determinate primary structure, and enforce
+compatibility to recover the redundants. That works well when the
+degree of <em>static</em> indeterminacy is small.</p>
+<p>The slope-deflection method flips the unknowns: it takes
+<strong>joint displacements</strong> &mdash; rotations \(\theta\) and
+transverse displacements \(\Delta\) &mdash; as the primary unknowns.
+Member end moments are written directly as functions of these
+displacements (satisfying compatibility automatically), and the
+unknown displacements are solved from joint
+<strong>equilibrium</strong> equations. This is efficient when the
+degree of <em>kinematic</em> indeterminacy (the number of unknown
+displacements) is small &mdash; and it is the direct ancestor of the
+matrix stiffness method later in the course, where the same member
+equations become a member stiffness matrix.</p>
+</div>
+
+<div class="step">
+<h2>Member kinematics and sign convention</h2>
+<p>Consider a prismatic member of length \(L\), flexural rigidity
+\(EI\), running from end \(i\) to end \(j\). Its displaced state is
+fully described by four quantities: the end rotations
+\(\theta_i,\theta_j\) and the end transverse displacements
+\(\Delta_i,\Delta_j\) (measured perpendicular to the member's
+undeformed axis).</p>
+<p><strong>Sign convention:</strong> clockwise end rotations
+\(\theta_i,\theta_j\) are positive; \(\Delta_i,\Delta_j\) are positive
+in the same sense used to define the member's local transverse axis
+(shown as &ldquo;positive direction&rdquo; in the figure). The chord
+connecting the two displaced end points is rotated from the original
+member axis by the <strong>chord rotation</strong></p>
+$$\psi = \frac{\Delta_j - \Delta_i}{L}$$
+<figure>
+  <img src="assets/img/member_kinematics.svg" alt="Deformed beam member from i to j showing end rotations theta_i, theta_j (clockwise positive) and end transverse displacements Delta_i, Delta_j, with the straight chord and the positive-direction reference shown.">
+  <figcaption>Member kinematics: end rotations \(\theta_i,\theta_j\)
+  (clockwise positive) and end displacements \(\Delta_i,\Delta_j\),
+  measured against the straight chord.</figcaption>
+</figure>
+<p class="caveat">Both end rotations are drawn with the <em>same</em>
+clockwise sense in the figure &mdash; that is what produces the
+S-shaped (inflected) elastic curve shown. This is a kinematic
+diagram only: the actual sign and magnitude of each \(\theta,\Delta\)
+in a real problem come out of solving the equilibrium equations.</p>
+</div>
+
+<div class="step">
+<h2>The slope-deflection equations</h2>
+<p>For a prismatic member with no member loads, the end moments are
+linear in the four kinematic quantities above. In terms of the chord
+rotation \(\psi=(\Delta_j-\Delta_i)/L\):</p>
+$$M_i = \frac{2EI}{L}\Big(2\theta_i + \theta_j - 3\psi\Big), \qquad
+M_j = \frac{2EI}{L}\Big(2\theta_j + \theta_i - 3\psi\Big)$$
+<p>Expanding \(\psi\) and collecting terms in \(\theta_i,\theta_j,
+\Delta_i,\Delta_j\) individually (the form used when assembling
+equilibrium equations):</p>
+$$M_i = \frac{2EI}{L}\left(2\theta_i + \theta_j
+  + \frac{3}{L}\Delta_i - \frac{3}{L}\Delta_j\right)$$
+$$M_j = \frac{2EI}{L}\left(\theta_i + 2\theta_j
+  + \frac{3}{L}\Delta_i - \frac{3}{L}\Delta_j\right)$$
+<p class="caveat">When a member also carries transverse load (a
+uniform load, a point load, &hellip;), each equation picks up an
+additional <strong>fixed-end moment</strong> term &mdash; see below.</p>
+</div>
+
+<div class="step">
+<h2>Member shears and the 4&times;4 stiffness matrix</h2>
+<p>The end shears follow from equilibrium of the member as a free
+body: taking moments about \(j\) gives \(V_i\), and \(\sum F_y=0\)
+gives \(V_j=-V_i\):</p>
+$$V_i = \frac{M_i+M_j}{L}, \qquad V_j = -V_i$$
+<p>Substituting the slope-deflection equations and collecting terms
+gives all four member-end actions as linear functions of all four
+end displacements:</p>
+$$M_i = \frac{2EI}{L}\Big(2\theta_i+\theta_j+\tfrac{3}{L}\Delta_i-\tfrac{3}{L}\Delta_j\Big)$$
+$$M_j = \frac{2EI}{L}\Big(\theta_i+2\theta_j+\tfrac{3}{L}\Delta_i-\tfrac{3}{L}\Delta_j\Big)$$
+$$V_i = \frac{2EI}{L}\Big(\tfrac{3}{L}\theta_i+\tfrac{3}{L}\theta_j+\tfrac{6}{L^2}\Delta_i-\tfrac{6}{L^2}\Delta_j\Big)$$
+$$V_j = \frac{2EI}{L}\Big(-\tfrac{3}{L}\theta_i-\tfrac{3}{L}\theta_j-\tfrac{6}{L^2}\Delta_i+\tfrac{6}{L^2}\Delta_j\Big)$$
+<p>which is exactly the member stiffness relation \([F]=[K][\Delta]\):</p>
+$$\begin{bmatrix}M_i\\M_j\\V_i\\V_j\end{bmatrix}
+= \frac{2EI}{L}
+\begin{bmatrix}
+2 & 1 & \dfrac{3}{L} & -\dfrac{3}{L} \\[4pt]
+1 & 2 & \dfrac{3}{L} & -\dfrac{3}{L} \\[4pt]
+\dfrac{3}{L} & \dfrac{3}{L} & \dfrac{6}{L^2} & -\dfrac{6}{L^2} \\[4pt]
+-\dfrac{3}{L} & -\dfrac{3}{L} & -\dfrac{6}{L^2} & \dfrac{6}{L^2}
+\end{bmatrix}
+\begin{bmatrix}\theta_i\\\theta_j\\\Delta_i\\\Delta_j\end{bmatrix}$$
+<p>Reordering rows/columns to group each end's moment with its shear
+&mdash; \([M_i,V_i,M_j,V_j]\) against \([\theta_i,\Delta_i,\theta_j,
+\Delta_j]\) &mdash; gives the same matrix with rows and columns
+swapped into that order:</p>
+$$\begin{bmatrix}M_i\\V_i\\M_j\\V_j\end{bmatrix}
+= \frac{2EI}{L}
+\begin{bmatrix}
+2 & \dfrac{3}{L} & 1 & -\dfrac{3}{L} \\[4pt]
+\dfrac{3}{L} & \dfrac{6}{L^2} & \dfrac{3}{L} & -\dfrac{6}{L^2} \\[4pt]
+1 & \dfrac{3}{L} & 2 & -\dfrac{3}{L} \\[4pt]
+-\dfrac{3}{L} & -\dfrac{6}{L^2} & -\dfrac{3}{L} & \dfrac{6}{L^2}
+\end{bmatrix}
+\begin{bmatrix}\theta_i\\\Delta_i\\\theta_j\\\Delta_j\end{bmatrix}$$
+<p class="caveat">This \(4\times4\) matrix <strong>is</strong> the
+member stiffness matrix used later in the direct stiffness method
+(Section 3.3) &mdash; slope-deflection derives it one member at a
+time; the matrix method assembles it into a global system.</p>
+</div>
+
+<div class="step">
+<h2>Fixed-end moments (FEM)</h2>
+<p>The slope-deflection equations above assume no load acts along the
+member span. When a member does carry load, each end develops an
+additional moment equal to the moment that would exist if <em>both</em>
+ends were fully fixed against rotation and translation &mdash; the
+<strong>fixed-end moment</strong>, \(FEM_i,FEM_j\) &mdash; and these
+simply add to the right-hand side of the \(M_i,M_j\) equations. The
+two canonical cases every student should have memorized:</p>
+<table class="summary-table">
+  <thead>
+    <tr><th>Loading</th><th>\(FEM\) at each end</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Uniformly distributed load \(w\) over the full span</td>
+        <td>\(wL^2/12\)</td></tr>
+    <tr><td>Point load \(P\) at midspan</td><td>\(PL/8\)</td></tr>
+  </tbody>
+</table>
+<p>The full fixed-end-moment table (both ends fixed, one end pinned,
+partial/offset loads, etc.) is given in the lecture notes, Section
+3.2.1.</p>
+</div>
+
+<div class="step">
+<h2>Procedure of the slope-deflection method</h2>
+<p><strong>1. Degrees of freedom (DOF).</strong> Label all supports
+and joints (nodes) to define spans. Draw the deflected shape to
+identify the number of DOFs &mdash; each node may have a linear
+displacement and/or an angular displacement. Assume unknown
+displacements act in the positive (clockwise-rotation) direction.</p>
+<p><strong>2. Slope-deflection equations.</strong> Relate internal
+moments at each node to the node displacements. Compute fixed-end
+moments (FEMs) for any loaded spans. Applying the slope-deflection
+equations generates two equations per interior (fixed&ndash;fixed)
+span, or one equation per span ending in a pin support
+(fixed&ndash;pin).</p>
+<p><strong>3. Equilibrium equations.</strong> Write one equilibrium
+equation per unknown DOF, expressed in terms of the moments from step
+2. Solve for the unknown displacements, then substitute back into the
+slope-deflection equations to recover the member end moments.</p>
+</div>
+
+<p class="caveat">This is worked end-to-end in class with a full
+example &mdash; bring the lecture notes, pp.&nbsp;48&ndash;56. The
+steps above set up every equation you need; the live derivation in
+lecture walks through solving them for a specific frame.</p>
+</main>
+
+<footer class="site-footer">
+CE 430, Fall 2026 — Washington State University
+</footer>
+</body>
+</html>
