@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CE 430 — Euler-Bernoulli Derivation</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="../../assets/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
@@ -16,21 +16,14 @@
   });"></script>
 </head>
 <body>
-<header class="site-nav">
-<nav>
-<span class="site-title">CE 430 — Indeterminate Structures</span>
-<a href="index.html">Home</a>
-<a href="materials.html">Materials</a>
-<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a>
-<a href="slope_deflection.html">Slope-Deflection Method</a>
-</nav>
+<header class="hero-header">
+<a class="back-link" href="../../index.html">&larr; Back to CE 430 Home</a>
+<h1>Euler-Bernoulli Beam Theory: the Missing Link</h1>
+<p class="subtitle-hero">From the linear cross-section stress distribution to
+\(q(x) = \frac{d^2}{dx^2}(EI\,\frac{d^2v}{dx^2})\) &mdash; Section 1.4.2 companion</p>
 </header>
 
-<main>
-<h1>Euler-Bernoulli Beam Theory: the Missing Link</h1>
-<p class="subtitle">From the linear cross-section stress distribution to
-\(q(x) = \frac{d^2}{dx^2}(EI\,\frac{d^2v}{dx^2})\) &mdash; Section 1.4.2 companion</p>
-
+<main class="page-card">
 <p>In lecture we jump from &ldquo;plane sections remain plane&rdquo;
 straight to \(M = EI\,v''\). This page fills in every step of that
 jump.</p>
@@ -52,7 +45,7 @@ $$\sigma_x(x,y) = E\,\varepsilon_x = -E\,y\,v''(x)$$
 <p>So the stress is also linear over the depth: compression on one
 side of the neutral axis, tension on the other.</p>
 <figure>
-  <img src="assets/img/strain_stress.svg" alt="Cross-section with linear strain and stress distributions across the depth.">
+  <img src="../../assets/img/strain_stress.svg" alt="Cross-section with linear strain and stress distributions across the depth.">
   <figcaption>Cross-section, strain, and stress &mdash; both are linear in \(y\).</figcaption>
 </figure>
 </div>
@@ -74,7 +67,7 @@ the constant of proportionality is \(EI\): \(E\) from the material,
 <div class="step">
 <h2>Step 4 &mdash; Equilibrium of a differential element</h2>
 <figure>
-  <img src="assets/img/element_fbd.svg" alt="Free-body diagram of a differential beam element of length dx, showing q(x), V, V+dV, M, and M+dM.">
+  <img src="../../assets/img/element_fbd.svg" alt="Free-body diagram of a differential beam element of length dx, showing q(x), V, V+dV, M, and M+dM.">
   <figcaption>Free-body diagram of a differential beam element \(dx\).</figcaption>
 </figure>
 <p>Vertical force balance and moment balance about the right face

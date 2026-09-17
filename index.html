@@ -1,106 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CE 430 — Course Home</title>
-<link rel="stylesheet" href="assets/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CE 430 - Analysis of Indeterminate Structures</title>
+    <!-- Matomo: CE 512's tracker (matomo.waecoco.com, siteId 12) is
+         instructor-owned and course-specific; CE 430 needs its own
+         siteId before this can be wired up. Placeholder only. -->
+    <!--
+    <script>
+      var _paq = window._paq = window._paq || [];
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="https://matomo.waecoco.com/";
+        _paq.push(['setTrackerUrl', u+'matomo.php']);
+        _paq.push(['setSiteId', 'REPLACE_WITH_CE430_SITE_ID']);
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6d0f22 0%, #981e32 55%, #b83a4e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: -2s; }
+        .particle:nth-child(3) { width: 40px; height: 40px; left: 70%; animation-delay: -4s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; left: 85%; animation-delay: -1s; }
+        .particle:nth-child(5) { width: 30px; height: 30px; left: 50%; animation-delay: -3s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+        }
+
+        /* Structural-analysis equations drifting in the background */
+        .equations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.05;
+            font-size: 24px;
+            color: white;
+        }
+
+        .equation {
+            position: absolute;
+            font-family: 'Times New Roman', serif;
+            animation: drift 20s linear infinite;
+        }
+
+        .equation:nth-child(1) { top: 10%; left: -20%; animation-delay: 0s; }
+        .equation:nth-child(2) { top: 30%; left: -30%; animation-delay: -5s; }
+        .equation:nth-child(3) { top: 50%; left: -25%; animation-delay: -10s; }
+        .equation:nth-child(4) { top: 70%; left: -35%; animation-delay: -15s; }
+
+        @keyframes drift {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(100vw + 400px)); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            color: white;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .course-info {
+            font-size: 1rem;
+            opacity: 0.8;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .chapter-section {
+            margin-top: 50px;
+        }
+
+        .chapter-section:first-of-type {
+            margin-top: 40px;
+        }
+
+        .chapter-title {
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .module-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), transparent, rgba(255, 255, 255, 0.3));
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .module-card:hover::before {
+            opacity: 1;
+        }
+
+        .module-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .module-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .module-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .module-topics {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        .coming-soon {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .coming-soon .module-icon {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .coming-soon:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .footer .canvas-note {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 20px 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-<header class="site-nav">
-<nav>
-<span class="site-title">CE 430 — Indeterminate Structures</span>
-<a href="index.html">Home</a>
-<a href="materials.html">Materials</a>
-<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a>
-<a href="slope_deflection.html">Slope-Deflection Method</a>
-</nav>
-</header>
+    <!-- Animated background particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
 
-<main>
-<h1>CE 430 — Indeterminate Structures</h1>
-<p class="subtitle">Fall 2026 &middot; Instructor: Dr. Haifeng Wang &middot; Department of Civil and Environmental Engineering, Washington State University</p>
+    <!-- Structural-analysis equations background -->
+    <div class="equations">
+        <div class="equation">EI v'''' = q(x)</div>
+        <div class="equation">M = EI &kappa;</div>
+        <div class="equation">0 = &theta;&deg; + M&alpha;</div>
+        <div class="equation">M&#7522; = (2EI/L)(2&theta;&#7522; + &theta;&#11388; &minus; 3&psi;)</div>
+    </div>
 
-<p>Welcome! This is the course website for CE 430. Here you'll find the
-full course schedule, the syllabus, released lecture notes and
-homework sets, and standalone derivation pages that go deeper than
-what we have time to cover step-by-step in lecture.</p>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">CE 430</h1>
+            <h2 class="subtitle">Analysis of Indeterminate Structures</h2>
+            <div class="course-info">Interactive Derivations &amp; Visualizations</div>
+        </header>
 
-<h2>Schedule</h2>
-<p class="schedule-note">(code) = coding homework; each one adds a stage to the <code>ce430</code> package.</p>
-<table class="schedule">
-  <thead>
-    <tr><th>Week</th><th>Date</th><th>Topic</th><th>HW assigned</th><th>HW due</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>1</td><td>Mon 08/24</td><td>Introduction; syllabus; diagnostic quiz</td><td></td><td></td></tr>
-    <tr><td>1</td><td>Wed 08/26</td><td>Determinacy, indeterminacy, and stability</td><td></td><td></td></tr>
-    <tr><td>1</td><td>Fri 08/28</td><td>Idealization, superposition, free-body diagrams</td><td>HW1</td><td></td></tr>
-    <tr><td>2</td><td>Mon 08/31</td><td>Euler-Bernoulli beam theory</td><td></td><td></td></tr>
-    <tr><td>2</td><td>Wed 09/02</td><td>Internal forces, displacements, fixed-end moments</td><td></td><td></td></tr>
-    <tr><td>2</td><td>Fri 09/04</td><td>Beam analysis examples; Quiz 1 (notes through p. 34)</td><td></td><td></td></tr>
-    <tr><td>3</td><td>Mon 09/07</td><td>Labor Day — no class</td><td></td><td></td></tr>
-    <tr><td>3</td><td>Wed 09/09</td><td>Force method; flexibility and stiffness coefficients</td><td>HW2</td><td>HW1</td></tr>
-    <tr><td>3</td><td>Fri 09/11</td><td>Force method examples; deflection tables</td><td></td><td></td></tr>
-    <tr><td>4</td><td>Mon 09/14</td><td>Degrees of freedom; slope-deflection equations</td><td>HW3</td><td></td></tr>
-    <tr><td>4</td><td>Wed 09/16</td><td>Slope-deflection procedure; beam and braced frame examples</td><td></td><td></td></tr>
-    <tr><td>4</td><td>Fri 09/18</td><td>Python and matrix computing; the ce430 package</td><td>HW4 (code)</td><td>HW3</td></tr>
-    <tr><td>5</td><td>Mon 09/21</td><td>Midterm 1 issued (take home); member stiffness matrix</td><td></td><td>HW2</td></tr>
-    <tr><td>5</td><td>Wed 09/23</td><td>Beam stiffness example: numbering and assembly</td><td></td><td></td></tr>
-    <tr><td>5</td><td>Fri 09/25</td><td>Direct stiffness procedure for beams</td><td>HW5</td><td>HW4 (code)</td></tr>
-    <tr><td>6</td><td>Mon 09/28</td><td>Compound beams and internal hinges</td><td></td><td></td></tr>
-    <tr><td>6</td><td>Wed 09/30</td><td>Plane frame member; local stiffness matrix</td><td></td><td></td></tr>
-    <tr><td>6</td><td>Fri 10/02</td><td>Transformation to global axes</td><td>HW6 (code)</td><td>HW5</td></tr>
-    <tr><td>7</td><td>Mon 10/05</td><td>Transformation practice; inclined members</td><td></td><td></td></tr>
-    <tr><td>7</td><td>Wed 10/07</td><td>Assembling the system stiffness matrix</td><td></td><td></td></tr>
-    <tr><td>7</td><td>Fri 10/09</td><td>Supports, constraints, and the partition method</td><td>HW7 (code)</td><td>HW6 (code)</td></tr>
-    <tr><td>8</td><td>Mon 10/12</td><td>Solving for displacements and reactions</td><td></td><td></td></tr>
-    <tr><td>8</td><td>Wed 10/14</td><td>Member end forces; shear and moment diagrams</td><td></td><td></td></tr>
-    <tr><td>8</td><td>Fri 10/16</td><td>Sparsity and node numbering</td><td>HW8</td><td></td></tr>
-    <tr><td>9</td><td>Mon 10/19</td><td>Constraint equations; settlement and inclined supports</td><td></td><td>HW7 (code)</td></tr>
-    <tr><td>9</td><td>Wed 10/21</td><td>Solver algorithm; checking commercial software</td><td></td><td></td></tr>
-    <tr><td>9</td><td>Fri 10/23</td><td>Member loads: fixed-end forces</td><td>HW9</td><td>HW8</td></tr>
-    <tr><td>10</td><td>Mon 10/26</td><td>Midterm 2 issued (take home); load superposition</td><td></td><td></td></tr>
-    <tr><td>10</td><td>Wed 10/28</td><td>Uniformly distributed member loads</td><td></td><td></td></tr>
-    <tr><td>10</td><td>Fri 10/30</td><td>Frame examples with member loads</td><td>HW10 (code)</td><td></td></tr>
-    <tr><td>11</td><td>Mon 11/02</td><td>Rotational releases: the four end cases</td><td></td><td>HW9</td></tr>
-    <tr><td>11</td><td>Wed 11/04</td><td>Fixed-pinned and pinned-fixed members</td><td></td><td></td></tr>
-    <tr><td>11</td><td>Fri 11/06</td><td>Truss elements; choosing the release case</td><td>HW11</td><td>HW10 (code)</td></tr>
-    <tr><td>12</td><td>Mon 11/09</td><td>Why nonlinear analysis; sources of nonlinearity</td><td></td><td></td></tr>
-    <tr><td>12</td><td>Wed 11/11</td><td>Veterans Day — no class</td><td></td><td></td></tr>
-    <tr><td>12</td><td>Fri 11/13</td><td>Geometric stiffness for trusses</td><td>HW12 (code)</td><td>HW11</td></tr>
-    <tr><td>13</td><td>Mon 11/16</td><td>Geometric stiffness for frames; buckling load</td><td></td><td></td></tr>
-    <tr><td>13</td><td>Wed 11/18</td><td>Newton-Raphson and incremental methods</td><td></td><td></td></tr>
-    <tr><td>13</td><td>Fri 11/20</td><td>P-Delta effects; plastic hinges and collapse</td><td></td><td>HW12 (code)</td></tr>
-    <tr><td>14</td><td>Mon 11/23</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
-    <tr><td>14</td><td>Wed 11/25</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
-    <tr><td>14</td><td>Fri 11/27</td><td>Thanksgiving recess — no class</td><td></td><td></td></tr>
-    <tr><td>15</td><td>Mon 11/30</td><td>Coding workshop: full-frame analysis; 3D frames</td><td></td><td></td></tr>
-    <tr><td>15</td><td>Wed 12/02</td><td>Coding workshop: checking against software; non-prismatic</td><td></td><td></td></tr>
-    <tr><td>15</td><td>Fri 12/04</td><td>Exam strategy; point/complexity budgeting</td><td></td><td></td></tr>
-    <tr><td>16</td><td>Mon 12/07</td><td>Review: determinacy, force, slope-deflection</td><td></td><td></td></tr>
-    <tr><td>16</td><td>Wed 12/09</td><td>Review: stiffness method</td><td></td><td></td></tr>
-    <tr><td>16</td><td>Fri 12/11</td><td>Review: nonlinear analysis; last class</td><td></td><td></td></tr>
-    <tr><td>—</td><td>Wed 12/16</td><td>Final exam 08:00-10:00, closed book</td><td></td><td></td></tr>
-  </tbody>
-</table>
-<h2>Syllabus</h2>
-<p><a href="syllabus.html">View the course syllabus</a>.
-Canvas remains authoritative for assignment submissions.</p>
+        <div class="chapter-section">
+            <h2 class="chapter-title">Chapter 1: Beam Analysis</h2>
+            <div class="modules-grid">
+                <!-- Euler-Bernoulli beam theory derivation -->
+                <div class="module-card" onclick="window.location.href='chapter_1/euler_bernoulli/index.html'">
+                    <div class="module-icon">📐</div>
+                    <h3 class="module-title">Euler&ndash;Bernoulli Beam Derivation</h3>
+                    <p class="module-description">
+                        Every step from &ldquo;plane sections remain plane&rdquo; to the fourth-order
+                        beam equation &mdash; kinematics, Hooke's law, cross-section resultants, and
+                        differential-element equilibrium.
+                    </p>
+                    <p class="module-topics">
+                        Strain/stress figures • Element free-body diagram • Full chain summary table
+                    </p>
+                </div>
+            </div>
+        </div>
 
-<h2>Materials &amp; Topics</h2>
-<p>Released lecture notes and homework sets are on the
-<a href="materials.html">Materials</a> page. For a full derivation of
-the Euler&ndash;Bernoulli beam equation (the steps lecture moves
-through quickly), see the
-<a href="euler_bernoulli.html">Euler-Bernoulli Derivation</a> page. For
-the slope-deflection equations and member stiffness matrix (Week 4),
-see the
-<a href="slope_deflection.html">Slope-Deflection Method</a> page.</p>
-</main>
+        <div class="chapter-section">
+            <h2 class="chapter-title">Chapters 2 &amp; 4: Force Method and the Direct Stiffness Method</h2>
+            <div class="modules-grid">
+                <div class="module-card coming-soon">
+                    <div class="module-icon">🚧</div>
+                    <h3 class="module-title">Flexibility, Deflection Tables &amp; Matrix Assembly</h3>
+                    <p class="module-description">
+                        Coming soon: interactive companions for the force method and the direct
+                        stiffness method, later this semester.
+                    </p>
+                    <p class="module-topics">
+                        Flexibility coefficients • Deflection tables • Assembly &amp; partitioning
+                    </p>
+                </div>
+            </div>
+        </div>
 
-<footer class="site-footer">
-CE 430, Fall 2026 &mdash; Washington State University
-</footer>
+        <div class="chapter-section">
+            <h2 class="chapter-title">Chapter 3: The Displacement Method</h2>
+            <div class="modules-grid">
+                <!-- Slope-deflection method -->
+                <div class="module-card" onclick="window.location.href='chapter_3/slope_deflection/index.html'">
+                    <div class="module-icon">🧮</div>
+                    <h3 class="module-title">Slope-Deflection Method</h3>
+                    <p class="module-description">
+                        Member kinematics and sign convention, the slope-deflection equations with
+                        the chord-rotation term, the shear equations, and the 4&times;4 member
+                        stiffness matrix.
+                    </p>
+                    <p class="module-topics">
+                        Kinematics figure • [F]=[K][&Delta;] • Fixed-end moments • Procedure summary
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Washington State University • Civil &amp; Environmental Engineering</p>
+            <p>Interactive derivations and visualizations for indeterminate structural analysis</p>
+            <p class="canvas-note">This site is a supplement to Canvas &mdash; schedule, syllabus,
+            lecture-note PDFs, and homework sets are posted on Canvas, not here.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Add some interactive sparkle effects
+        document.addEventListener('mousemove', function(e) {
+            if (Math.random() < 0.1) {
+                createSparkle(e.clientX, e.clientY);
+            }
+        });
+
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.style.position = 'fixed';
+            sparkle.style.left = x + 'px';
+            sparkle.style.top = y + 'px';
+            sparkle.style.width = '4px';
+            sparkle.style.height = '4px';
+            sparkle.style.background = 'rgba(255, 255, 255, 0.8)';
+            sparkle.style.borderRadius = '50%';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.zIndex = '100';
+            sparkle.style.animation = 'sparkle 1s ease-out forwards';
+
+            document.body.appendChild(sparkle);
+
+            setTimeout(() => {
+                document.body.removeChild(sparkle);
+            }, 1000);
+        }
+
+        // Add sparkle animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes sparkle {
+                0% {
+                    transform: scale(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: scale(1) rotate(180deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>

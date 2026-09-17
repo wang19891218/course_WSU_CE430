@@ -8,51 +8,58 @@
 
 * { box-sizing: border-box; }
 
+/* Shared chrome for content (subpage) pages, matching the CE 512
+   site's gradient-body + white-card format. The landing page
+   (index.html) has its own fully self-contained inline <style> per
+   the ce512.course.hfwang.dev convention and does not use this file. */
 body {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   color: var(--text);
   line-height: 1.55;
-  background: #fff;
+  background: linear-gradient(135deg, #6d0f22 0%, #981e32 55%, #b83a4e 100%);
+  min-height: 100vh;
 }
 
-header.site-nav {
-  background: var(--accent);
-  padding: 0.9rem 1.5rem;
-}
-
-header.site-nav nav {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: baseline;
-}
-
-header.site-nav .site-title {
+header.hero-header {
+  text-align: center;
+  padding: 1.6rem 1.5rem 1rem;
+  color: #fff;
   font-family: Arial, Helvetica, sans-serif;
-  font-weight: bold;
-  color: #fff;
-  font-size: 1.1rem;
-  margin-right: auto;
 }
 
-header.site-nav a {
-  color: #fff;
+header.hero-header a.back-link {
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  display: inline-block;
+  margin-bottom: 0.6rem;
 }
 
-header.site-nav a:hover {
+header.hero-header a.back-link:hover {
   text-decoration: underline;
 }
 
-main {
-  max-width: 900px;
+header.hero-header h1 {
+  font-size: 1.9rem;
+  margin: 0 0 0.3rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+header.hero-header p.subtitle-hero {
+  font-size: 0.95rem;
+  opacity: 0.9;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  max-width: 640px;
+}
+
+main.page-card {
+  max-width: 900px;
+  margin: 0 auto 3rem;
+  padding: 2rem 2rem 2.5rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 h1, h2, h3 {
@@ -74,7 +81,7 @@ h2 {
   margin-top: -0.6rem;
 }
 
-.schedule-note, .caveat {
+.caveat {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 0.9rem;
   color: var(--muted);
@@ -91,8 +98,7 @@ table {
   margin: 1rem 0 2rem;
 }
 
-table.schedule th, table.schedule td,
-table.materials th, table.materials td {
+table th, table td {
   border: 1px solid var(--border);
   padding: 0.45rem 0.6rem;
   text-align: left;
@@ -104,39 +110,11 @@ table th {
   font-weight: bold;
 }
 
-table.schedule tr:nth-child(even) td {
-  background: #fcfcfc;
-}
-
 code {
   background: var(--bg-alt);
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
   font-size: 0.9em;
-}
-
-.material-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.material-row a.download {
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--accent);
-  color: #fff;
-  text-decoration: none;
-  padding: 0.35rem 0.9rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.material-row a.download:hover {
-  opacity: 0.85;
 }
 
 figure {
@@ -171,7 +149,7 @@ footer.site-footer {
   margin: 0 auto;
   padding: 1rem 1.5rem 3rem;
   font-family: Arial, Helvetica, sans-serif;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 0.85rem;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
 }
