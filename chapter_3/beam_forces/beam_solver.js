@@ -181,6 +181,79 @@ class BeamSolver {
     }
     return kappa;
   }
+
+  // Engineering force outputs derived from the CURRENT shape, in the
+  // sagging-positive convention: M(x) = -EI * v''(x) (the minus because
+  // this file's v is positive DOWNWARD), shear V = dM/dx, and
+  // upward-positive vertical support reactions R_i = V(0+), R_j = -V(L-)
+  // (2nd-order one-sided differences at the ends).
+  forces() {
+    const kappa = this.curvature();
+    const { N, h, EI } = this;
+    const M = kappa.map((k) => -EI * k);
+    const Vi = (-3 * M[0] + 4 * M[1] - M[2]) / (2 * h);
+    const Vj = (3 * M[N] - 4 * M[N - 1] + M[N - 2]) / (2 * h);
+    return { M, Mi: M[0], Mj: M[N], Ri: Vi, Rj: -Vj };
+  }
+
+  // Exact STATIC beam-theory solution for the current loads/boundaries:
+  // EI v'''' = q solved in closed form as two polynomial segments split
+  // at the point load (v = A0+A1 x+A2 x^2+A3 x^3 + w x^4/24EI per
+  // segment), with 4 boundary conditions (fixed: v, v' prescribed;
+  // pinned: v prescribed, v''=0) and 4 matching conditions at x=xP
+  // (v, v', v'' continuous; EI*(v2'''-v1''') = P). Returns v(x) and the
+  // sagging-positive bending moment M(x) = -EI v'' sampled at the nodes.
+  // Uses the boundary TARGETS (what the sliders ask for), so the live
+  // dynamic solution visibly settles onto this curve.
+  staticTheory() {
+    const { N, L, EI } = this;
+    const a = Math.min(Math.max(this.xP, 1e-6), L - 1e-6);
+    const P = this.P, w = this.w;
+    const bI = { type: this.endI.type, ...this._endITarget };
+    const bJ = { type: this.endJ.type, ...this._endJTarget };
+    // unknowns: [A0,A1,A2,A3, B0,B1,B2,B3]
+    const rows = [], rhs = [];
+    const part = (x) => (w * x ** 4) / (24 * EI); // particular terms
+    const part1 = (x) => (w * x ** 3) / (6 * EI);
+    const part2 = (x) => (w * x ** 2) / (2 * EI);
+    // end i (segment A at x=0)
+    rows.push([1, 0, 0, 0, 0, 0, 0, 0]); rhs.push(bI.delta - part(0));
+    if (bI.type === 'fixed') { rows.push([0, 1, 0, 0, 0, 0, 0, 0]); rhs.push(bI.theta - part1(0)); }
+    else { rows.push([0, 0, 2, 0, 0, 0, 0, 0]); rhs.push(-part2(0)); }
+    // end j (segment B at x=L)
+    rows.push([0, 0, 0, 0, 1, L, L * L, L ** 3]); rhs.push(bJ.delta - part(L));
+    if (bJ.type === 'fixed') { rows.push([0, 0, 0, 0, 0, 1, 2 * L, 3 * L * L]); rhs.push(bJ.theta - part1(L)); }
+    else { rows.push([0, 0, 0, 0, 0, 0, 2, 6 * L]); rhs.push(-part2(L)); }
+    // continuity at x=a: v, v', v''; shear jump EI*(vB'''-vA''')=P
+    rows.push([1, a, a * a, a ** 3, -1, -a, -a * a, -(a ** 3)]); rhs.push(0);
+    rows.push([0, 1, 2 * a, 3 * a * a, 0, -1, -2 * a, -3 * a * a]); rhs.push(0);
+    rows.push([0, 0, 2, 6 * a, 0, 0, -2, -6 * a]); rhs.push(0);
+    rows.push([0, 0, 0, -6, 0, 0, 0, 6]); rhs.push(P / EI);
+    // gaussian elimination with partial pivoting (8x8)
+    const n = 8;
+    for (let c = 0; c < n; c++) {
+      let p = c;
+      for (let r = c + 1; r < n; r++) if (Math.abs(rows[r][c]) > Math.abs(rows[p][c])) p = r;
+      [rows[c], rows[p]] = [rows[p], rows[c]]; [rhs[c], rhs[p]] = [rhs[p], rhs[c]];
+      for (let r = 0; r < n; r++) {
+        if (r === c || Math.abs(rows[c][c]) < 1e-14) continue;
+        const f = rows[r][c] / rows[c][c];
+        for (let cc = c; cc < n; cc++) rows[r][cc] -= f * rows[c][cc];
+        rhs[r] -= f * rhs[c];
+      }
+    }
+    const sol = rhs.map((b, k) => b / rows[k][k]);
+    const A = sol.slice(0, 4), B = sol.slice(4, 8);
+    const v = new Array(N + 1), M = new Array(N + 1);
+    for (let k = 0; k <= N; k++) {
+      const x = (k * L) / N;
+      const C = x <= a ? A : B;
+      v[k] = C[0] + C[1] * x + C[2] * x * x + C[3] * x ** 3 + part(x);
+      const vpp = 2 * C[2] + 6 * C[3] * x + part2(x);
+      M[k] = -EI * vpp;
+    }
+    return { v, M };
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

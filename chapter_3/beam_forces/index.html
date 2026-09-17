@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CE 430 — Beam Deflection &amp; Curvature (Interactive)</title>
+<title>CE 430 — Beam Forces from Loads and Support Motion</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -63,6 +63,7 @@
   canvas { display: block; width: 100%; background: #fbfaf8; border-radius: 8px; }
   #beamCanvas { height: 320px; border: 1px solid #ddd; }
   #curvCanvas { height: 160px; border: 1px solid #ddd; }
+  #theoryCanvas { height: 200px; border: 1px solid #ddd; }
   .caption {
     font-size: 0.85rem;
     color: #555;
@@ -152,37 +153,47 @@
 <body>
 <header class="hero-header">
 <a class="back-link" href="../../index.html">&larr; Back to CE 430 Home</a>
-<h1>Beam Deflection &amp; Curvature &mdash; Interactive</h1>
-<p class="subtitle-hero">Drag a load or move a support and watch a real,
-dynamically-integrated beam settle into its new shape.</p>
+<h1>Beam Forces from Loads and Support Motion</h1>
+<p class="subtitle-hero">Apply a load, rotate or settle a support &mdash;
+and watch the forces that develop in the member, live.</p>
 </header>
 
 <p class="intro">This is a live physics simulation (not a canned
 animation): a beam is discretized into many small segments, each with
 mass, damping, and bending stiffness, and integrated forward in time.
-Apply a load, rotate or settle a support, and watch the beam actually
-respond &mdash; deform, overshoot a little, and settle &mdash; the same
-way a real member would. The slope-deflection method you're covering in
-class works with exactly these ingredients: end rotations, support
-settlement, and the moments they produce.</p>
+Push on it with a load, or move one of its supports, and watch it
+deform, overshoot a little, and settle &mdash; while the <strong>end
+moments and support reactions</strong> it develops are drawn on the beam
+with their live magnitudes, and the bending-moment diagram updates
+underneath.</p>
 
 <div class="main-container">
   <div>
     <div class="box">
-      <h2>Beam &mdash; deformed shape, colored by curvature</h2>
+      <h2>Beam &mdash; deformed shape, end moments and reactions</h2>
       <canvas id="beamCanvas"></canvas>
       <div class="legend-bar"></div>
-      <div class="legend"><span>concave one way</span><span>straight</span><span>concave the other way</span></div>
-      <p class="caption">The deflected shape determines the curvature &mdash;
-      and curvature is what the member moments resist. Watch the color
-      flip between the support region and midspan under a uniform load:
-      that sign flip is real, not decorative.</p>
+      <div class="legend"><span>bending one way</span><span>straight</span><span>bending the other way</span></div>
+      <p class="caption">Orange arrows are the forces the member develops:
+      curved arrows are the end moments, straight arrows the support
+      reactions, with live magnitudes. Green arrows are the loads you
+      apply. Watch how a pure support rotation &mdash; no load at all
+      &mdash; still produces end moments and a pair of reactions.</p>
     </div>
     <div class="box">
-      <h2>Curvature &kappa;(x) along the span</h2>
+      <h2>Bending moment M(x) along the span</h2>
       <canvas id="curvCanvas"></canvas>
-      <p class="caption">Same coloring as the beam above, plotted as a
-      curve. Dashed line is &kappa;=0.</p>
+      <p class="caption">The bending moment the member carries at every
+      point, updated live from the current shape. Dashed line is M=0;
+      the thin dark dashed curve is the beam-theory prediction.</p>
+    </div>
+    <div class="box">
+      <h2>Beam theory solution (exact, static)</h2>
+      <canvas id="theoryCanvas"></canvas>
+      <p class="caption">The exact solution of the beam equation
+      EIv&#8243;&#8243;=q for the current loads and support positions,
+      solved in closed form (dark curve). The gray curve is the live
+      simulation &mdash; watch it settle onto the theory prediction.</p>
     </div>
   </div>
 
@@ -261,8 +272,10 @@ CE 430, Fall 2026 — Washington State University
 
   const beamCanvas = document.getElementById('beamCanvas');
   const curvCanvas = document.getElementById('curvCanvas');
+  const theoryCanvas = document.getElementById('theoryCanvas');
   const beamCtx = beamCanvas.getContext('2d');
   const curvCtx = curvCanvas.getContext('2d');
+  const theoryCtx = theoryCanvas.getContext('2d');
 
   function fitCanvas(c) {
     const rect = c.getBoundingClientRect();
@@ -404,18 +417,9 @@ CE 430, Fall 2026 — Washington State University
     const xToPx = (x) => marginX + (x / solver.L) * plotW;
     const vToPx = (v) => marginY + plotH / 2 + v * vScale;
 
-    // reference datum + chord
-    beamCtx.strokeStyle = '#bbb';
-    beamCtx.setLineDash([4 * dprB, 4 * dprB]);
-    beamCtx.lineWidth = 1;
-    beamCtx.beginPath();
-    beamCtx.moveTo(xToPx(0), vToPx(solver.v[0]));
-    beamCtx.lineTo(xToPx(solver.L), vToPx(solver.v[solver.N]));
-    beamCtx.stroke();
-    beamCtx.setLineDash([]);
-
     // curvature-colored beam as a sequence of short segments
     const kappa = solver.curvature();
+    const forces = solver.forces();
     let kMax = 1e-6;
     for (let k = 0; k <= solver.N; k++) kMax = Math.max(kMax, Math.abs(kappa[k]));
 
@@ -431,20 +435,58 @@ CE 430, Fall 2026 — Washington State University
       beamCtx.stroke();
     }
 
-    // end tangent indicators (make theta, psi visible)
-    beamCtx.strokeStyle = '#333';
-    beamCtx.lineWidth = 1.5 * dprB;
-    const tanLen = 0.09 * solver.L;
-    beamCtx.beginPath();
-    beamCtx.moveTo(xToPx(0), vToPx(solver.v[0] - tanLen * solver.endI.theta));
-    beamCtx.lineTo(xToPx(tanLen), vToPx(solver.v[0] + tanLen * solver.endI.theta));
-    beamCtx.moveTo(xToPx(solver.L - tanLen), vToPx(solver.v[solver.N] - tanLen * solver.endJ.theta));
-    beamCtx.lineTo(xToPx(solver.L), vToPx(solver.v[solver.N] + tanLen * solver.endJ.theta));
-    beamCtx.stroke();
-
     // supports
     drawSupport(beamCtx, xToPx(0), vToPx(solver.v[0]), solver.endI.type, false);
     drawSupport(beamCtx, xToPx(solver.L), vToPx(solver.v[solver.N]), solver.endJ.type, true);
+
+    // --- developed forces (orange): end moments as curved arrows,
+    // support reactions as straight arrows, with live magnitudes ---
+    const FORCE = '#c2570a';
+    beamCtx.strokeStyle = FORCE;
+    beamCtx.fillStyle = FORCE;
+    beamCtx.font = `${12 * dprB}px sans-serif`;
+    function momentArc(xPix, yPix, M, label) {
+      if (Math.abs(M) < 5e-3) return;
+      const r = 22 * dprB;
+      // sagging-positive M shown at the ends: draw the couple the support
+      // applies; arc sweep direction flips with the sign of M.
+      const ccw = M > 0;
+      beamCtx.lineWidth = 2.5 * dprB;
+      beamCtx.beginPath();
+      beamCtx.arc(xPix, yPix, r, -0.75 * Math.PI, 0.25 * Math.PI, ccw);
+      beamCtx.stroke();
+      const aEnd = ccw ? -0.75 * Math.PI : 0.25 * Math.PI;
+      const ax = xPix + r * Math.cos(aEnd), ay = yPix + r * Math.sin(aEnd);
+      const tang = aEnd + (ccw ? -Math.PI / 2 : Math.PI / 2);
+      beamCtx.beginPath();
+      beamCtx.moveTo(ax + 7 * dprB * Math.cos(tang - 0.45), ay + 7 * dprB * Math.sin(tang - 0.45));
+      beamCtx.lineTo(ax, ay);
+      beamCtx.lineTo(ax + 7 * dprB * Math.cos(tang + 0.45), ay + 7 * dprB * Math.sin(tang + 0.45));
+      beamCtx.stroke();
+      beamCtx.fillText(`${label} = ${M.toFixed(2)}`, xPix - 20 * dprB, yPix - r - 8 * dprB);
+    }
+    function reactionArrow(xPix, yPix, R, label) {
+      if (Math.abs(R) < 5e-3) return;
+      const len = Math.min(46, 18 + 28 * Math.abs(R)) * dprB;
+      const dir = R > 0 ? -1 : 1; // upward reaction drawn pointing up (canvas -y)
+      const yTail = yPix + 24 * dprB - dir * 0; // start below the support
+      beamCtx.lineWidth = 2.5 * dprB;
+      beamCtx.beginPath();
+      beamCtx.moveTo(xPix, yTail + (dir === -1 ? len : 0));
+      beamCtx.lineTo(xPix, yTail + (dir === -1 ? 0 : len));
+      beamCtx.stroke();
+      const yHead = yTail + (dir === -1 ? 0 : len);
+      beamCtx.beginPath();
+      beamCtx.moveTo(xPix - 5 * dprB, yHead - dir * 7 * dprB);
+      beamCtx.lineTo(xPix, yHead);
+      beamCtx.lineTo(xPix + 5 * dprB, yHead - dir * 7 * dprB);
+      beamCtx.stroke();
+      beamCtx.fillText(`${label} = ${R.toFixed(2)}`, xPix + 8 * dprB, yTail + len + 12 * dprB);
+    }
+    momentArc(xToPx(0), vToPx(solver.v[0]), forces.Mi, 'Mᵢ');
+    momentArc(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Mj, 'Mⱼ');
+    reactionArrow(xToPx(0), vToPx(solver.v[0]), forces.Ri, 'Rᵢ');
+    reactionArrow(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Rj, 'Rⱼ');
 
     // point load arrow
     if (Math.abs(solver.P) > 1e-6) {
@@ -488,13 +530,16 @@ CE 430, Fall 2026 — Washington State University
       }
     }
 
-    // --- curvature plot ---
+    // --- bending moment diagram M(x) ---
+    const Mx = forces.M;
+    let mMax = 1e-6;
+    for (let k = 0; k <= solver.N; k++) mMax = Math.max(mMax, Math.abs(Mx[k]));
     const Wc = curvCanvas.width, Hc = curvCanvas.height;
     curvCtx.clearRect(0, 0, Wc, Hc);
     const mX = 40 * dprC, mY = 16 * dprC;
     const pW = Wc - 2 * mX, pH = Hc - 2 * mY;
     const xToPxC = (x) => mX + (x / solver.L) * pW;
-    const kToPxC = (kv) => mY + pH / 2 - (kv / kMax) * (pH / 2 - 6 * dprC);
+    const mToPxC = (mv) => mY + pH / 2 - (mv / mMax) * (pH / 2 - 6 * dprC);
 
     curvCtx.strokeStyle = '#bbb';
     curvCtx.setLineDash([4 * dprC, 4 * dprC]);
@@ -507,13 +552,68 @@ CE 430, Fall 2026 — Washington State University
     curvCtx.lineWidth = 3 * dprC;
     for (let k = 0; k < solver.N; k++) {
       const x0 = (k * solver.L) / solver.N, x1 = ((k + 1) * solver.L) / solver.N;
+      // hue keyed to curvature (= -M/EI) so the diagram's colors match
+      // the beam's coloring at the same x
       const kAvg = (kappa[k] + kappa[k + 1]) / 2;
       curvCtx.strokeStyle = curvColor(kAvg, kMax);
       curvCtx.beginPath();
-      curvCtx.moveTo(xToPxC(x0), kToPxC(kappa[k]));
-      curvCtx.lineTo(xToPxC(x1), kToPxC(kappa[k + 1]));
+      curvCtx.moveTo(xToPxC(x0), mToPxC(Mx[k]));
+      curvCtx.lineTo(xToPxC(x1), mToPxC(Mx[k + 1]));
       curvCtx.stroke();
     }
+    curvCtx.fillStyle = '#666';
+    curvCtx.font = `${11 * dprC}px sans-serif`;
+    curvCtx.fillText('M(x), sagging positive', mX, mY + 4 * dprC);
+
+    // beam-theory M(x) overlaid as a thin dark dashed curve
+    const theory = solver.staticTheory();
+    curvCtx.strokeStyle = '#333';
+    curvCtx.lineWidth = 1.2 * dprC;
+    curvCtx.setLineDash([5 * dprC, 4 * dprC]);
+    curvCtx.beginPath();
+    for (let k = 0; k <= solver.N; k++) {
+      const px = xToPxC((k * solver.L) / solver.N), py = mToPxC(theory.M[k]);
+      if (k === 0) curvCtx.moveTo(px, py); else curvCtx.lineTo(px, py);
+    }
+    curvCtx.stroke();
+    curvCtx.setLineDash([]);
+
+    // --- beam-theory panel: exact static shape vs live simulation ---
+    const dprT = fitCanvas(theoryCanvas);
+    const Wt = theoryCanvas.width, Ht = theoryCanvas.height;
+    theoryCtx.clearRect(0, 0, Wt, Ht);
+    const mXt = 60 * dprT, mYt = 30 * dprT;
+    const pWt = Wt - 2 * mXt, pHt = Ht - 2 * mYt;
+    const xToPxT = (x) => mXt + (x / solver.L) * pWt;
+    const vToPxT = (v) => mYt + pHt / 2 + v * (pHt / 2 / 0.45);
+    theoryCtx.strokeStyle = '#ddd';
+    theoryCtx.lineWidth = 1;
+    theoryCtx.beginPath();
+    theoryCtx.moveTo(mXt, mYt + pHt / 2);
+    theoryCtx.lineTo(mXt + pWt, mYt + pHt / 2);
+    theoryCtx.stroke();
+    // live simulation shape (gray)
+    theoryCtx.strokeStyle = '#b5b5b5';
+    theoryCtx.lineWidth = 4 * dprT;
+    theoryCtx.lineCap = 'round';
+    theoryCtx.beginPath();
+    for (let k = 0; k <= solver.N; k++) {
+      const px = xToPxT((k * solver.L) / solver.N), py = vToPxT(solver.v[k]);
+      if (k === 0) theoryCtx.moveTo(px, py); else theoryCtx.lineTo(px, py);
+    }
+    theoryCtx.stroke();
+    // exact beam-theory shape (dark)
+    theoryCtx.strokeStyle = '#1a1a1a';
+    theoryCtx.lineWidth = 1.8 * dprT;
+    theoryCtx.beginPath();
+    for (let k = 0; k <= solver.N; k++) {
+      const px = xToPxT((k * solver.L) / solver.N), py = vToPxT(theory.v[k]);
+      if (k === 0) theoryCtx.moveTo(px, py); else theoryCtx.lineTo(px, py);
+    }
+    theoryCtx.stroke();
+    theoryCtx.fillStyle = '#666';
+    theoryCtx.font = `${11 * dprT}px sans-serif`;
+    theoryCtx.fillText('dark: exact beam theory   gray: live simulation', mXt, mYt - 8 * dprT);
   }
 
   let lastT = null;
