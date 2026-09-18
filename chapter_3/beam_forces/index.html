@@ -235,18 +235,41 @@ solution (dashed) and the numbers table.</p>
       equation</p>
       <p class="engine-eq">m&thinsp;&part;<sup>2</sup>v/&part;t<sup>2</sup>
       + damping + EI&thinsp;&part;<sup>4</sup>v/&part;x<sup>4</sup> = q(x,&thinsp;t)</p>
-      <p class="engine-text">The beam is divided into <strong>200
-      segments</strong>, each carrying mass, bending stiffness EI, and
-      strain-rate damping. The restoring force at each node comes from
-      the fourth spatial derivative of the deflected shape &mdash; the
-      same physics behind everything in this course. Because bending
-      stiffness makes the system numerically &ldquo;stiff,&rdquo; each
-      animation frame is split into thousands of tiny stable time
-      steps. The dashed blue curves come from a separate, exact
-      closed-form solution of the same equation with
-      &part;<sup>2</sup>v/&part;t<sup>2</sup> = 0 &mdash; the
-      simulation settling onto them is the engine's ongoing
-      self-check.</p>
+      <p class="engine-text"><strong>Which engine?</strong> A
+      purpose-built one: <a href="beam_solver.js"><code>beam_solver.js</code></a>,
+      about 200 lines of dependency-free JavaScript written for this
+      course. Off-the-shelf game physics engines (Matter.js, Box2D,
+      Rapier) simulate <em>rigid</em> bodies and cannot represent
+      continuous bending quantitatively &mdash; so this page solves the
+      real beam equation instead.</p>
+      <p class="engine-text"><strong>How it works, each time step:</strong></p>
+      <ol class="engine-text">
+        <li>The beam is divided into <strong>200 segments</strong>
+        (201 nodes), each carrying mass and a deflection v.</li>
+        <li>At every node the <em>bending force</em> is computed from
+        the fourth derivative of the current shape,
+        EI&thinsp;&part;<sup>4</sup>v/&part;x<sup>4</sup>, using a
+        5-point finite-difference stencil &mdash; plus strain-rate
+        damping and your applied loads q(x).</li>
+        <li>Supports are constraints: a <em>fixed</em> end prescribes
+        both position (settlement &Delta;) and slope (rotation
+        &theta;); a <em>pinned</em> end prescribes position and sets
+        the end moment to zero.</li>
+        <li>Velocities and positions are updated by symplectic Euler
+        integration. Bending stiffness makes the system numerically
+        &ldquo;stiff,&rdquo; so each animation frame is split into
+        <em>thousands</em> of tiny stable substeps (live count
+        below).</li>
+        <li>The forces you see are read off the shape:
+        M&nbsp;=&nbsp;&minus;EI&thinsp;v&Prime;, V&nbsp;=&nbsp;dM/dx,
+        reactions from the end shears.</li>
+      </ol>
+      <p class="engine-text">The dashed blue curves come from a second,
+      independent solver in the same file: the exact closed-form static
+      solution of the same equation
+      (&part;<sup>2</sup>v/&part;t<sup>2</sup> = 0). The simulation
+      settling onto it &mdash; every time, for every input &mdash; is
+      the engine's ongoing self-check.</p>
       <p class="caption" id="engineInfo">engine starting&hellip;</p>
     </div>
   </div>
