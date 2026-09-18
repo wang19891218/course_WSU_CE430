@@ -200,8 +200,10 @@ solution (dashed) and the numbers table.</p>
       <canvas id="deflCanvas"></canvas>
     </div>
     <p class="caption" style="color:#f5eaea">In every diagram: solid
-    crimson = live simulation, dark dashed = exact closed-form
-    beam-theory solution (instant). Axis ticks give the numeric scale.</p>
+    crimson = live simulation, dashed blue = exact closed-form
+    beam-theory solution. When the simulation settles, the two curves
+    lie exactly on top of each other &mdash; that overlap is the check.
+    Axis ticks give the numeric scale.</p>
     <div class="box">
       <h2>Check the numbers &mdash; simulation vs. exact</h2>
       <table class="check-table" id="checkTable">
@@ -302,7 +304,7 @@ CE 430, Fall 2026 — Washington State University
   // Real units: length ft, force kips, moment kip*ft, EI kip*ft^2.
   // (mLin and zeta shape the transient only, not any settled value.)
   const ZETA = 0.35;
-  const solver = new BeamSolver({ N: 60, L: 20, EI: 40000, mLin: 1, zeta: ZETA });
+  const solver = new BeamSolver({ N: 200, L: 20, EI: 40000, mLin: 1, zeta: ZETA });
   solver.setBoundary({ type: 'fixed', theta: 0, delta: 0 }, { type: 'fixed', theta: 0, delta: 0 });
   solver.snapBoundary();
 
@@ -656,7 +658,18 @@ CE 430, Fall 2026 — Washington State University
         ctx.beginPath(); ctx.moveTo(px, yBase - 3 * dpr); ctx.lineTo(px, yBase + 3 * dpr); ctx.stroke();
         ctx.fillText(xf + (xf === 20 ? ' ft' : ''), px - 6 * dpr, Hd - 3 * dpr);
       }
-      // live simulation
+      // textbook-style shading (V and M): fill the area between the
+      // curve and the zero baseline, closed by vertical end ordinates
+      if (key !== 'v') {
+        ctx.fillStyle = 'rgba(152, 30, 50, 0.16)';
+        ctx.beginPath();
+        ctx.moveTo(xPx(0), yPx(0));
+        for (let k = 0; k < sim.length; k++) ctx.lineTo(xPx(k), yPx(sim[k]));
+        ctx.lineTo(xPx(sim.length - 1), yPx(0));
+        ctx.closePath();
+        ctx.fill();
+      }
+      // live simulation curve
       ctx.strokeStyle = '#981e32';
       ctx.lineWidth = 2.5 * dpr;
       ctx.beginPath();
@@ -664,16 +677,48 @@ CE 430, Fall 2026 — Washington State University
         if (k === 0) ctx.moveTo(xPx(k), yPx(sim[k])); else ctx.lineTo(xPx(k), yPx(sim[k]));
       }
       ctx.stroke();
-      // exact beam-theory solution, dashed dark (instant)
-      ctx.strokeStyle = '#222';
-      ctx.lineWidth = 1.4 * dpr;
-      ctx.setLineDash([5 * dpr, 4 * dpr]);
+      // vertical end-ordinate closure lines (textbook convention)
+      if (key !== 'v') {
+        ctx.beginPath();
+        ctx.moveTo(xPx(0), yPx(0)); ctx.lineTo(xPx(0), yPx(sim[0]));
+        ctx.moveTo(xPx(sim.length - 1), yPx(0)); ctx.lineTo(xPx(sim.length - 1), yPx(sim[sim.length - 1]));
+        ctx.stroke();
+      }
+      // ordinate value labels at the ends and the extremum
+      ctx.fillStyle = '#5a1220';
+      ctx.font = `${10.5 * dpr}px sans-serif`;
+      const annThresh = key === 'v' ? 0.02 : 0.5;
+      const annot = (k) => {
+        const val = sim[k];
+        if (Math.abs(val) < annThresh) return;
+        const above = downPositive ? val < 0 : val > 0;
+        const y = yPx(val) + (above ? -5 * dpr : 13 * dpr);
+        const txt = fmt(val);
+        const tw = ctx.measureText(txt).width;
+        const x = Math.min(Math.max(xPx(k) - tw / 2, mX + 2 * dpr), mX + pW - tw - 2 * dpr);
+        ctx.fillText(txt, x, y);
+      };
+      let kExt = 0;
+      for (let k = 0; k < sim.length; k++) if (Math.abs(sim[k]) > Math.abs(sim[kExt])) kExt = k;
+      annot(0); annot(sim.length - 1);
+      if (kExt !== 0 && kExt !== sim.length - 1) annot(kExt);
+      // exact beam-theory solution, dashed blue (instant); it lies
+      // exactly on top of the crimson curve once the simulation settles
+      ctx.strokeStyle = '#1a3aa8';
+      ctx.lineWidth = 1.8 * dpr;
+      ctx.setLineDash([7 * dpr, 5 * dpr]);
       ctx.beginPath();
       for (let k = 0; k < th.length; k++) {
         if (k === 0) ctx.moveTo(xPx(k), yPx(th[k])); else ctx.lineTo(xPx(k), yPx(th[k]));
       }
       ctx.stroke();
       ctx.setLineDash([]);
+      // mini-legend
+      ctx.font = `${9.5 * dpr}px sans-serif`;
+      ctx.fillStyle = '#981e32';
+      ctx.fillText('— simulation', mX + pW - 150 * dpr, 10 * dpr);
+      ctx.fillStyle = '#1a3aa8';
+      ctx.fillText('- - exact', mX + pW - 60 * dpr, 10 * dpr);
     }
     const fmt1 = (v) => v.toFixed(1), fmt2 = (v) => v.toFixed(2);
     if (ui.shear.checked) diagram(shearCanvas, shearCtx, 'V', forces.V, theory.V, fmt1, false);

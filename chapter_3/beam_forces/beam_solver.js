@@ -59,10 +59,10 @@ class BeamSolver {
     // Only affects the transient "settle" look, not the final static
     // shape the verification harness checks against.
     this.mu = 2 * zeta * Math.sqrt(EI * mLin);
-    this._acc = new Array(N + 1).fill(0); // scratch: per-substep accelerations
+    this._acc = new Float64Array(N + 1); // scratch: per-substep accelerations
 
-    this.v = new Array(N + 1).fill(0);
-    this.vel = new Array(N + 1).fill(0);
+    this.v = new Float64Array(N + 1);   // typed arrays: N can be 200+
+    this.vel = new Float64Array(N + 1); // at interactive frame rates
 
     this.endI = { type: 'fixed', theta: 0, delta: 0 };
     this.endJ = { type: 'fixed', theta: 0, delta: 0 };
