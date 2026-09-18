@@ -20,12 +20,12 @@
  * (k = 1 and k = N-1) without special-casing them. See _ghost().
  *
  * NOTE ON "theta": this is the raw geometric slope dv/dx at that end in
- * this solver's own v-positive-downward convention. It is a physics-demo
- * quantity, not literally the clockwise-positive slope-deflection theta
- * taught in lecture (no slope-deflection equations are implemented or
- * displayed here -- this file only animates the underlying beam physics:
- * how a load or a support motion deforms the member, and how that shape
- * determines curvature).
+ * this solver's own v-positive-downward convention -- a physics-demo
+ * quantity, not tied to any particular hand-analysis method's sign
+ * convention for end rotation. No method name, equation, or worked
+ * example is implemented or displayed anywhere on the page this file
+ * drives -- it only animates the underlying beam physics: how a load
+ * or a support motion produces end moments and support reactions.
  *
  * Time integration is explicit semi-implicit ("symplectic") Euler:
  *   vel[k] += accel[k] * dt;  v[k] += vel[k] * dt;

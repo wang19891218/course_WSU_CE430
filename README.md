@@ -34,14 +34,22 @@ index.html                          Landing page (ce512-style: animated
                                      gradient background, drifting
                                      equations, chapter sections of cards)
 chapter_1/euler_bernoulli/index.html   Euler-Bernoulli derivation (KaTeX, 2 SVGs)
-chapter_3/slope_deflection/index.html  Beam deflection & curvature: an
-                                     interactive physics animation
-                                     (canvas + vanilla JS, no equations
-                                     or derivation text -- deliberately
-                                     NOT a copy of the lecture notes)
-chapter_3/slope_deflection/beam_solver.js  Standalone dynamic
-                                     Euler-Bernoulli beam solver (no DOM
-                                     dependency) used by the page above
+chapter_3/beam_forces/index.html    Beam forces from loads and support
+                                     motion: an interactive physics
+                                     animation (canvas + vanilla JS, no
+                                     equations, no method name anywhere
+                                     -- deliberately NOT a copy of the
+                                     lecture notes or the slope-
+                                     deflection method taught in class)
+chapter_3/beam_forces/beam_solver.js  Standalone dynamic Euler-
+                                     Bernoulli beam solver (no DOM
+                                     dependency) used by the page above.
+                                     Also solves the exact closed-form
+                                     static solution of the same
+                                     boundary-value problem
+                                     (staticTheory()), overlaid on the
+                                     page so students see the live
+                                     simulation settle onto it
 assets/style.css                    Shared chrome for the derivation-
                                      style content pages (gradient
                                      body, header/back-link, white
@@ -67,11 +75,13 @@ interactive simulation), then add one `module-card` entry to
 **Rule of thumb for what belongs in `chapter_N/`:** interactive
 demonstrations of the underlying physics/mechanics (animations,
 simulations, derivations of *general* results) -- never a rendering
-of the specific worked examples or procedure the instructor covers
-live in class. The slope-deflection page, for instance, animates beam
-deflection and curvature generically; it does not show the
-slope-deflection equations or work through an example, both of which
-stay in the lecture notes and in class.
+of the specific worked examples, equations, or procedure the
+instructor covers live in class, and never the name of a method
+taught in lecture. The beam-forces page, for instance, animates the
+end moments and support reactions a member develops under a load or
+a support motion, generically; it shows no equations, no method
+name, and no worked example -- those stay in the lecture notes and
+in class.
 
 ## Analytics (open item)
 
