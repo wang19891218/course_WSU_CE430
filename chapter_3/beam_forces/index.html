@@ -701,7 +701,11 @@ CE 430, Fall 2026 — Washington State University
       let kExt = 0;
       for (let k = 0; k < sim.length; k++) if (Math.abs(sim[k]) > Math.abs(sim[kExt])) kExt = k;
       annot(0); annot(sim.length - 1);
-      if (kExt !== 0 && kExt !== sim.length - 1) annot(kExt);
+      // skip the extremum label when it sits within ~8% of the span of
+      // either end -- the end label already shows (nearly) that value,
+      // and the two labels would print on top of each other
+      const kMargin = Math.ceil(0.08 * (sim.length - 1));
+      if (kExt > kMargin && kExt < sim.length - 1 - kMargin) annot(kExt);
       // exact beam-theory solution, dashed blue (instant); it lies
       // exactly on top of the crimson curve once the simulation settles
       ctx.strokeStyle = '#1a3aa8';
