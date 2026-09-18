@@ -47,17 +47,19 @@ class BeamSolver {
     this.EI = EI;
     this.mLin = mLin;
 
-    // Strain-rate (Kelvin-Voigt-type) damping: the damping force is
-    // -mu * d2(vel)/dx2 rather than mass-proportional -c*vel. For a
-    // beam (omega_n = sqrt(EI/mLin) * k_n^2) this gives the SAME
-    // damping ratio zeta for EVERY mode:
+    // Strain-rate ("square-root"/structural-type) damping: the damping
+    // force is -mu * d2(vel)/dx2 rather than mass-proportional -c*vel.
+    // For sinusoidal (pinned-pinned) modes, omega_n = sqrt(EI/mLin)*k_n^2
+    // gives the same damping ratio for every mode:
     //   zeta_n = mu*k_n^2 / (2*mLin*omega_n) = mu / (2*sqrt(EI*mLin))
-    // so the high-frequency ripple decays as fast as the fundamental
-    // (mass-proportional damping leaves high modes ringing, which made
-    // the animation look like it vibrated too much). Only affects the
-    // transient "settle" look, not the final static shape the
-    // verification harness checks against.
+    // For other end conditions the mode shapes are not exact sinusoids,
+    // so zeta is approximately (not exactly) uniform across modes -- still
+    // far better than mass-proportional damping, whose zeta_n ~ 1/omega_n
+    // leaves high-mode ripple ringing (the "vibrates too much" complaint).
+    // Only affects the transient "settle" look, not the final static
+    // shape the verification harness checks against.
     this.mu = 2 * zeta * Math.sqrt(EI * mLin);
+    this._acc = new Array(N + 1).fill(0); // scratch: per-substep accelerations
 
     this.v = new Array(N + 1).fill(0);
     this.vel = new Array(N + 1).fill(0);
@@ -107,12 +109,17 @@ class BeamSolver {
 
   // Recommended stable dt for explicit sub-stepping. The pentadiagonal
   // stencil (1,-4,6,-4,1) has maximum eigenvalue 16/h^4 (Nyquist mode,
-  // v_k = (-1)^k), giving omega_max = 4*sqrt(EI/(mLin*h^4)). Semi-implicit
-  // Euler on a harmonic oscillator x'' = -omega^2 x is stable for
-  // omega*dt <= 2; `safety` adds margin below that bound.
+  // v_k = (-1)^k), giving omega_max = 4*sqrt(EI/(mLin*h^4)). With the
+  // strain-rate damping term (velocity-Laplacian, max eigenvalue 4/h^2)
+  // the semi-implicit Euler stability condition on the worst mode is
+  //   omega^2*dt^2 + 2*(mu*4/h^2/mLin)*dt <= 4,
+  // solved here as a quadratic in dt so large zeta values stay stable
+  // (with mu = 0 this reduces to the undamped bound dt <= 2/omega).
   stableDt(safety = 0.4) {
-    const omegaMax = 4 * Math.sqrt(this.EI / (this.mLin * this.h ** 4));
-    return (safety * 2) / omegaMax;
+    const A = (16 * this.EI) / (this.mLin * this.h ** 4); // omega_max^2
+    const B = (2 * this.mu * 4) / (this.h * this.h * this.mLin);
+    const dtMax = (-B + Math.sqrt(B * B + 16 * A)) / (2 * A);
+    return safety * dtMax;
   }
 
   // sign = +1 for the left ghost node (index -1, next to node 0),
@@ -131,6 +138,7 @@ class BeamSolver {
 
     const tau = 0.12; // seconds, easing time-constant for boundary drags
     const a = 1 - Math.exp(-dt / tau);
+    const prevDI = this.endI.delta, prevDJ = this.endJ.delta;
     this.endI.theta += (this._endITarget.theta - this.endI.theta) * a;
     this.endI.delta += (this._endITarget.delta - this.endI.delta) * a;
     this.endJ.theta += (this._endJTarget.theta - this.endJ.theta) * a;
@@ -138,6 +146,11 @@ class BeamSolver {
 
     v[0] = this.endI.delta;
     v[N] = this.endJ.delta;
+    // prescribed-end velocities from the easing increments, so the
+    // damping term sees the true support motion instead of an
+    // artificial zero (which would drag against moving supports)
+    vel[0] = (this.endI.delta - prevDI) / dt;
+    vel[N] = (this.endJ.delta - prevDJ) / dt;
 
     const vGhostLeft = this._ghost(this.endI.type, v[0], v[1], this.endI.theta, +1);
     const vGhostRight = this._ghost(this.endJ.type, v[N], v[N - 1], this.endJ.theta, -1);
@@ -146,22 +159,24 @@ class BeamSolver {
     // at one node integrates to P over the node's h-wide strip)
     const kP = Math.max(1, Math.min(N - 1, Math.round(this.xP / h)));
 
+    // Two-pass update: ALL accelerations are computed from the
+    // unmodified velocity field first, THEN velocities are updated.
+    // (A single fused loop would read vel[k-1] after this substep
+    // already updated it -- a directional bias that breaks the
+    // symmetric-Laplacian damping.)
+    const acc = this._acc;
     for (let k = 1; k <= N - 1; k++) {
       const vm2 = k - 2 < 0 ? vGhostLeft : v[k - 2];
       const vm1 = k - 1 < 0 ? vGhostLeft : v[k - 1];
       const vp1 = k + 1 > N ? vGhostRight : v[k + 1];
       const vp2 = k + 2 > N ? vGhostRight : v[k + 2];
       const d4v = (vm2 - 4 * vm1 + 6 * v[k] - 4 * vp1 + vp2) / h ** 4;
-      // strain-rate damping: mu * d2(vel)/dx2 (vel=0 at the prescribed
-      // end nodes, which is exact for their eased quasi-static motion)
-      const velm1 = k - 1 < 0 ? 0 : vel[k - 1];
-      const velp1 = k + 1 > N ? 0 : vel[k + 1];
-      const d2vel = (velm1 - 2 * vel[k] + velp1) / (h * h);
+      const d2vel = (vel[k - 1] - 2 * vel[k] + vel[k + 1]) / (h * h);
       let q = this.w;
       if (k === kP) q += this.P / h;
-      const accel = (q + mu * d2vel - EI * d4v) / mLin;
-      vel[k] += accel * dt;
+      acc[k] = (q + mu * d2vel - EI * d4v) / mLin;
     }
+    for (let k = 1; k <= N - 1; k++) vel[k] += acc[k] * dt;
     for (let k = 1; k <= N - 1; k++) v[k] += vel[k] * dt;
   }
 
@@ -195,7 +210,11 @@ class BeamSolver {
   // sagging-positive convention: M(x) = -EI * v''(x) (the minus because
   // this file's v is positive DOWNWARD), shear V = dM/dx, and
   // upward-positive vertical support reactions R_i = V(0+), R_j = -V(L-)
-  // (2nd-order one-sided differences at the ends).
+  // (2nd-order one-sided differences at the ends). These are the
+  // ELASTIC (structural) forces only: during the transient the damping
+  // model also transmits a boundary traction ~ mu * d(vel)/dx that is
+  // deliberately not shown -- it vanishes at rest, so the settled
+  // values are the exact physical reactions.
   forces() {
     const kappa = this.curvature();
     const { N, h, EI } = this;
