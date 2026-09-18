@@ -413,8 +413,11 @@ CE 430, Fall 2026 — Washington State University
     ui.typeJ.value = 'fixed'; ui.thetaJ.value = 0; ui.deltaJ.value = 0;
     updateThetaEnabled();
     readControls();
+    solver.snapBoundary(); // otherwise old settlement/rotation ease back in
     solver.v.fill(0);
     solver.vel.fill(0);
+    solver.v[0] = solver.endI.delta;
+    solver.v[solver.N] = solver.endJ.delta;
   });
 
   function drawSupport(ctx, x, y, type, mirrored) {
@@ -452,16 +455,25 @@ CE 430, Fall 2026 — Washington State University
 
     const marginX = 60 * dprB, marginY = 46 * dprB;
     const plotW = W - 2 * marginX, plotH = H - 2 * marginY;
-    const forces = solver.forces();
     const theory = solver.staticTheory();
+    // in instant mode the shape IS the sampled exact solution, but FD
+    // ghost values at fixed ends are only first-order accurate there --
+    // so display the ANALYTIC forces, not finite differences of them
+    const forces = ui.instant.checked
+      ? { M: theory.M, V: theory.V, Mi: theory.M[0], Mj: theory.M[solver.N],
+          Ri: theory.V[0], Rj: -theory.V[solver.N] }
+      : solver.forces();
 
-    // auto-magnified deflection scale (eased so it doesn't jitter),
-    // with the magnification factor displayed for honesty
+    // auto-magnified deflection scale, displayed for honesty; zooming
+    // OUT (shrinking scale) is immediate so the shape can never leave
+    // the canvas, zooming IN is eased so it doesn't jitter
     let maxV = 1e-3;
     for (let k = 0; k <= solver.N; k++)
       maxV = Math.max(maxV, Math.abs(solver.v[k]), Math.abs(theory.v[k]));
     const targetScale = (0.38 * plotH) / maxV;
-    dispScale = dispScale === null ? targetScale : dispScale + (targetScale - dispScale) * 0.08;
+    dispScale = dispScale === null || targetScale < dispScale
+      ? targetScale
+      : dispScale + (targetScale - dispScale) * 0.08;
     const xToPx = (x) => marginX + (x / solver.L) * plotW;
     const vToPx = (v) => marginY + plotH / 2 + v * dispScale;
     const mag = dispScale / (plotW / solver.L);
@@ -500,31 +512,45 @@ CE 430, Fall 2026 — Washington State University
     beamCtx.strokeStyle = FORCE;
     beamCtx.fillStyle = FORCE;
     beamCtx.font = `${12 * dprB}px sans-serif`;
-    function momentArc(xPix, yPix, M, label) {
+    function momentArc(xPix, yPix, M, label, isRightEnd) {
       if (Math.abs(M) < 0.5) return; // kip·ft display threshold
       const r = 22 * dprB;
-      // sagging-positive M shown at the ends: draw the couple the support
-      // applies; arc sweep direction flips with the sign of M.
-      const ccw = M > 0;
+      // Sense of the SUPPORT COUPLE on the beam. Derivation (sagging-
+      // positive M, canvas y down): at the left end a hogging (M<0)
+      // moment means the support couple appears clockwise on screen;
+      // at the right end the same sagging-sign couple appears with the
+      // OPPOSITE screen sense (mirror symmetry).
+      const ccw = isRightEnd ? M < 0 : M > 0;
+      const a0 = -0.75 * Math.PI, a1 = 0.25 * Math.PI;
       beamCtx.lineWidth = 2.5 * dprB;
       beamCtx.beginPath();
-      beamCtx.arc(xPix, yPix, r, -0.75 * Math.PI, 0.25 * Math.PI, ccw);
+      beamCtx.arc(xPix, yPix, r, a0, a1, ccw);
       beamCtx.stroke();
-      const aEnd = ccw ? -0.75 * Math.PI : 0.25 * Math.PI;
-      const ax = xPix + r * Math.cos(aEnd), ay = yPix + r * Math.sin(aEnd);
-      const tang = aEnd + (ccw ? -Math.PI / 2 : Math.PI / 2);
+      // arrowhead at the true END of the traversal (a1 for both senses),
+      // pointing along the direction of motion there
+      const hx = xPix + r * Math.cos(a1), hy = yPix + r * Math.sin(a1);
+      const aBefore = ccw ? a1 + 0.28 : a1 - 0.28;
+      const bx = xPix + r * Math.cos(aBefore), by = yPix + r * Math.sin(aBefore);
+      let tx = hx - bx, ty = hy - by;
+      const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+      const wing = 7 * dprB, spread = 0.45;
       beamCtx.beginPath();
-      beamCtx.moveTo(ax + 7 * dprB * Math.cos(tang - 0.45), ay + 7 * dprB * Math.sin(tang - 0.45));
-      beamCtx.lineTo(ax, ay);
-      beamCtx.lineTo(ax + 7 * dprB * Math.cos(tang + 0.45), ay + 7 * dprB * Math.sin(tang + 0.45));
+      beamCtx.moveTo(hx - wing * (tx * Math.cos(spread) - ty * Math.sin(spread)),
+                     hy - wing * (tx * Math.sin(spread) + ty * Math.cos(spread)));
+      beamCtx.lineTo(hx, hy);
+      beamCtx.lineTo(hx - wing * (tx * Math.cos(-spread) - ty * Math.sin(-spread)),
+                     hy - wing * (tx * Math.sin(-spread) + ty * Math.cos(-spread)));
       beamCtx.stroke();
-      beamCtx.fillText(`${label} = ${M.toFixed(1)} kip·ft`, xPix - 24 * dprB, yPix - r - 8 * dprB);
+      const txt = `${label} = ${M.toFixed(1)} kip·ft`;
+      const tw = beamCtx.measureText(txt).width;
+      const lx = isRightEnd ? Math.min(xPix - 24 * dprB, W - tw - 4 * dprB) : xPix - 24 * dprB;
+      beamCtx.fillText(txt, Math.max(2 * dprB, lx), yPix - r - 8 * dprB);
     }
-    function reactionArrow(xPix, yPix, R, label) {
+    function reactionArrow(xPix, yPix, R, label, isRightEnd) {
       if (Math.abs(R) < 0.25) return; // kips display threshold
       const len = Math.min(46, 18 + 0.6 * Math.abs(R)) * dprB;
       const dir = R > 0 ? -1 : 1; // upward reaction drawn pointing up (canvas -y)
-      const yTail = yPix + 24 * dprB - dir * 0; // start below the support
+      const yTail = yPix + 24 * dprB;
       beamCtx.lineWidth = 2.5 * dprB;
       beamCtx.beginPath();
       beamCtx.moveTo(xPix, yTail + (dir === -1 ? len : 0));
@@ -536,12 +562,15 @@ CE 430, Fall 2026 — Washington State University
       beamCtx.lineTo(xPix, yHead);
       beamCtx.lineTo(xPix + 5 * dprB, yHead - dir * 7 * dprB);
       beamCtx.stroke();
-      beamCtx.fillText(`${label} = ${R.toFixed(1)} kips`, xPix + 8 * dprB, yTail + len + 12 * dprB);
+      const txt = `${label} = ${R.toFixed(1)} kips`;
+      const tw = beamCtx.measureText(txt).width;
+      const lx = isRightEnd ? xPix - tw - 8 * dprB : xPix + 8 * dprB;
+      beamCtx.fillText(txt, lx, yTail + len + 12 * dprB);
     }
-    momentArc(xToPx(0), vToPx(solver.v[0]), forces.Mi, 'Mᵢ');
-    momentArc(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Mj, 'Mⱼ');
-    reactionArrow(xToPx(0), vToPx(solver.v[0]), forces.Ri, 'Rᵢ');
-    reactionArrow(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Rj, 'Rⱼ');
+    momentArc(xToPx(0), vToPx(solver.v[0]), forces.Mi, 'Mᵢ', false);
+    momentArc(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Mj, 'Mⱼ', true);
+    reactionArrow(xToPx(0), vToPx(solver.v[0]), forces.Ri, 'Rᵢ', false);
+    reactionArrow(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Rj, 'Rⱼ', true);
 
     // point load arrow
     if (Math.abs(solver.P) > 1e-6) {
@@ -600,7 +629,10 @@ CE 430, Fall 2026 — Washington State University
       amax *= 1.15;
       amax = Math.max(amax, key === 'v' ? 0.02 : 0.5); // display floor
       const prev = diagScales[key];
-      const scale = (diagScales[key] = prev ? prev + (amax - prev) * 0.15 : amax);
+      // expanding to contain the data is IMMEDIATE (no clipping);
+      // shrinking back down is eased so the plot doesn't jitter
+      const scale = (diagScales[key] =
+        !prev || amax > prev ? amax : prev + (amax - prev) * 0.15);
       const sgn = downPositive ? 1 : -1; // deflection drawn down-positive
       const xPx = (k) => mX + (k / solver.N) * pW;
       const yPx = (val) => mY + pH / 2 + sgn * (val / scale) * (pH / 2);
@@ -614,6 +646,15 @@ CE 430, Fall 2026 — Washington State University
         ctx.setLineDash([]);
         ctx.fillStyle = '#777';
         ctx.fillText(fmt(val), 6 * dpr, y + 3 * dpr);
+      }
+      // x-axis ticks (ft)
+      ctx.fillStyle = '#777';
+      const yBase = mY + pH / 2;
+      for (let xf = 0; xf <= 20; xf += 5) {
+        const px = mX + (xf / solver.L) * pW;
+        ctx.strokeStyle = '#bbb';
+        ctx.beginPath(); ctx.moveTo(px, yBase - 3 * dpr); ctx.lineTo(px, yBase + 3 * dpr); ctx.stroke();
+        ctx.fillText(xf + (xf === 20 ? ' ft' : ''), px - 6 * dpr, Hd - 3 * dpr);
       }
       // live simulation
       ctx.strokeStyle = '#981e32';

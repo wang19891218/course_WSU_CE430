@@ -184,6 +184,8 @@ class BeamSolver {
   // internally split into enough stable substeps. Returns the substep
   // count actually used (exposed for on-page diagnostics).
   advance(dtFrame, safety = 0.4) {
+    if (!(dtFrame > 0)) return 0; // dt=0 would make the prescribed-end
+    // velocity (delta increment)/dt a 0/0 NaN and poison the state
     const dt = this.stableDt(safety);
     const nSub = Math.max(1, Math.ceil(dtFrame / dt));
     const subDt = dtFrame / nSub;
