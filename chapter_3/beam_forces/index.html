@@ -151,6 +151,17 @@
     background: linear-gradient(90deg, #2b6cb0 0%, #f5f5f0 50%, #c0392b 100%);
     margin-top: 4px;
   }
+  .engine-text { font-size: 0.88rem; color: #444; margin: 6px 0; }
+  .engine-eq {
+    font-family: 'Times New Roman', serif;
+    font-size: 1.05rem;
+    text-align: center;
+    color: #222;
+    background: #f6f4f1;
+    border-radius: 8px;
+    padding: 8px;
+    margin: 8px 0;
+  }
   footer.site-footer {
     max-width: 900px;
     margin: 0 auto;
@@ -216,6 +227,27 @@ solution (dashed) and the numbers table.</p>
           <tr><td>max |v| (in)</td><td id="cVmS"></td><td id="cVmT"></td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="box">
+      <h2>Under the hood &mdash; the physics engine</h2>
+      <p class="engine-text">This page is not a canned animation. Every
+      frame, it integrates the dynamic Euler&ndash;Bernoulli beam
+      equation</p>
+      <p class="engine-eq">m&thinsp;&part;<sup>2</sup>v/&part;t<sup>2</sup>
+      + damping + EI&thinsp;&part;<sup>4</sup>v/&part;x<sup>4</sup> = q(x,&thinsp;t)</p>
+      <p class="engine-text">The beam is divided into <strong>200
+      segments</strong>, each carrying mass, bending stiffness EI, and
+      strain-rate damping. The restoring force at each node comes from
+      the fourth spatial derivative of the deflected shape &mdash; the
+      same physics behind everything in this course. Because bending
+      stiffness makes the system numerically &ldquo;stiff,&rdquo; each
+      animation frame is split into thousands of tiny stable time
+      steps. The dashed blue curves come from a separate, exact
+      closed-form solution of the same equation with
+      &part;<sup>2</sup>v/&part;t<sup>2</sup> = 0 &mdash; the
+      simulation settling onto them is the engine's ongoing
+      self-check.</p>
+      <p class="caption" id="engineInfo">engine starting&hellip;</p>
     </div>
   </div>
 
@@ -752,6 +784,7 @@ CE 430, Fall 2026 — Washington State University
     let dt = (t - lastT) / 1000;
     lastT = t;
     dt = Math.min(dt, 1 / 20); // clamp huge gaps (tab switch, etc.)
+    const engineInfo = document.getElementById('engineInfo');
     if (ui.instant.checked) {
       // no dynamics: snap boundaries and adopt the exact closed-form
       // static solution directly (dynamics resume from it if unchecked)
@@ -759,12 +792,17 @@ CE 430, Fall 2026 — Washington State University
       const th = solver.staticTheory();
       for (let k = 0; k <= solver.N; k++) solver.v[k] = th.v[k];
       solver.vel.fill(0);
-      out.substep.textContent = 'instant mode: exact closed-form static solution, no time integration';
+      const msg = 'instant mode: engine paused — showing the exact closed-form static solution';
+      out.substep.textContent = msg;
+      engineInfo.textContent = msg;
     } else {
       if (ui.slow.checked) dt *= 0.2;
       const nSub = solver.advance(dt);
-      out.substep.textContent = nSub + ' physics substeps this frame (dt=' +
-        solver.stableDt().toExponential(2) + 's each, stability-limited by EI/h^4)';
+      const msg = 'live: ' + solver.N + ' segments · ' + nSub +
+        ' substeps this frame · dt = ' + solver.stableDt().toExponential(2) +
+        ' s (stability-limited by EI/h⁴) · damping ratio ζ = 0.35';
+      out.substep.textContent = nSub + ' physics substeps this frame';
+      engineInfo.textContent = msg;
     }
     draw();
     requestAnimationFrame(frame);
