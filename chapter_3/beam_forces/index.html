@@ -266,7 +266,7 @@ CE 430, Fall 2026 — Washington State University
 (function () {
   'use strict';
 
-  const solver = new BeamSolver({ N: 60, L: 1, EI: 1, mLin: 1, zeta: 0.09 });
+  const solver = new BeamSolver({ N: 60, L: 1, EI: 1, mLin: 1, zeta: 0.35 });
   solver.setBoundary({ type: 'fixed', theta: 0, delta: 0 }, { type: 'fixed', theta: 0, delta: 0 });
   solver.snapBoundary();
 

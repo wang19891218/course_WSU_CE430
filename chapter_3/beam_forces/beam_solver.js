@@ -40,20 +40,24 @@
  */
 
 class BeamSolver {
-  constructor({ N = 60, L = 1, EI = 1, mLin = 1, zeta = 0.08 } = {}) {
+  constructor({ N = 60, L = 1, EI = 1, mLin = 1, zeta = 0.35 } = {}) {
     this.N = N;
     this.L = L;
     this.h = L / N;
     this.EI = EI;
     this.mLin = mLin;
 
-    // Viscous damping coefficient (per unit length), set from a target
-    // damping ratio zeta on the beam's first vibration mode (simply
-    // supported reference frequency omega1 = (pi/L)^2 * sqrt(EI/mLin)).
-    // Only affects the transient "settle" look, not the final static
-    // shape the verification harness checks against.
-    const omega1 = (Math.PI / L) ** 2 * Math.sqrt(EI / mLin);
-    this.c = 2 * zeta * mLin * omega1;
+    // Strain-rate (Kelvin-Voigt-type) damping: the damping force is
+    // -mu * d2(vel)/dx2 rather than mass-proportional -c*vel. For a
+    // beam (omega_n = sqrt(EI/mLin) * k_n^2) this gives the SAME
+    // damping ratio zeta for EVERY mode:
+    //   zeta_n = mu*k_n^2 / (2*mLin*omega_n) = mu / (2*sqrt(EI*mLin))
+    // so the high-frequency ripple decays as fast as the fundamental
+    // (mass-proportional damping leaves high modes ringing, which made
+    // the animation look like it vibrated too much). Only affects the
+    // transient "settle" look, not the final static shape the
+    // verification harness checks against.
+    this.mu = 2 * zeta * Math.sqrt(EI * mLin);
 
     this.v = new Array(N + 1).fill(0);
     this.vel = new Array(N + 1).fill(0);
@@ -123,7 +127,7 @@ class BeamSolver {
   }
 
   step(dt) {
-    const { N, h, EI, mLin, c, v, vel } = this;
+    const { N, h, EI, mLin, mu, v, vel } = this;
 
     const tau = 0.12; // seconds, easing time-constant for boundary drags
     const a = 1 - Math.exp(-dt / tau);
@@ -148,9 +152,14 @@ class BeamSolver {
       const vp1 = k + 1 > N ? vGhostRight : v[k + 1];
       const vp2 = k + 2 > N ? vGhostRight : v[k + 2];
       const d4v = (vm2 - 4 * vm1 + 6 * v[k] - 4 * vp1 + vp2) / h ** 4;
+      // strain-rate damping: mu * d2(vel)/dx2 (vel=0 at the prescribed
+      // end nodes, which is exact for their eased quasi-static motion)
+      const velm1 = k - 1 < 0 ? 0 : vel[k - 1];
+      const velp1 = k + 1 > N ? 0 : vel[k + 1];
+      const d2vel = (velm1 - 2 * vel[k] + velp1) / (h * h);
       let q = this.w;
       if (k === kP) q += this.P / h;
-      const accel = (q - c * vel[k] - EI * d4v) / mLin;
+      const accel = (q + mu * d2vel - EI * d4v) / mLin;
       vel[k] += accel * dt;
     }
     for (let k = 1; k <= N - 1; k++) v[k] += vel[k] * dt;
