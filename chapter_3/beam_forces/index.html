@@ -62,8 +62,21 @@
   }
   canvas { display: block; width: 100%; background: #fbfaf8; border-radius: 8px; }
   #beamCanvas { height: 320px; border: 1px solid #ddd; }
-  #curvCanvas { height: 160px; border: 1px solid #ddd; }
-  #theoryCanvas { height: 200px; border: 1px solid #ddd; }
+  #shearCanvas, #momentCanvas, #deflCanvas { height: 170px; border: 1px solid #ddd; }
+  table.check-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  table.check-table th, table.check-table td {
+    border: 1px solid #e0e0e0;
+    padding: 4px 8px;
+    text-align: right;
+  }
+  table.check-table td:first-child, table.check-table th:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
   .caption {
     font-size: 0.85rem;
     color: #555;
@@ -158,62 +171,74 @@
 and watch the forces that develop in the member, live.</p>
 </header>
 
-<p class="intro">This is a live physics simulation (not a canned
-animation): a beam is discretized into many small segments, each with
-mass, damping, and bending stiffness, and integrated forward in time.
-Push on it with a load, or move one of its supports, and watch it
-deform, overshoot a little, and settle &mdash; while the <strong>end
-moments and support reactions</strong> it develops are drawn on the beam
-with their live magnitudes, and the bending-moment diagram updates
-underneath.</p>
+<p class="intro">A live physics simulation of a <strong>20-ft
+beam</strong>: push on it with a load or move a support, and watch it
+respond while the shear diagram, moment diagram, and deflection update
+underneath &mdash; each checkable against the exact beam-theory
+solution (dashed) and the numbers table.</p>
 
 <div class="main-container">
   <div>
     <div class="box">
-      <h2>Beam &mdash; deformed shape, end moments and reactions</h2>
+      <h2>Beam &mdash; loads, reactions and end moments</h2>
       <canvas id="beamCanvas"></canvas>
-      <div class="legend-bar"></div>
-      <div class="legend"><span>bending one way</span><span>straight</span><span>bending the other way</span></div>
-      <p class="caption">Orange arrows are the forces the member develops:
-      curved arrows are the end moments, straight arrows the support
-      reactions, with live magnitudes. Green arrows are the loads you
-      apply. Watch how a pure support rotation &mdash; no load at all
-      &mdash; still produces end moments and a pair of reactions.</p>
+      <p class="caption">Green arrows: applied loads. Orange: the forces
+      the member develops &mdash; support reactions (kips) and end
+      moments (kip&middot;ft), with live values. The deflected shape is
+      magnified for visibility (factor shown top-left).</p>
     </div>
-    <div class="box">
-      <h2>Bending moment M(x) along the span</h2>
-      <canvas id="curvCanvas"></canvas>
-      <p class="caption">The bending moment the member carries at every
-      point, updated live from the current shape. Dashed line is M=0;
-      the thin dark dashed curve is the beam-theory prediction.</p>
+    <div class="box" id="boxShear">
+      <h2>Shear diagram V(x) &mdash; kips</h2>
+      <canvas id="shearCanvas"></canvas>
     </div>
+    <div class="box" id="boxMoment">
+      <h2>Bending moment diagram M(x) &mdash; kip&middot;ft (sagging positive)</h2>
+      <canvas id="momentCanvas"></canvas>
+    </div>
+    <div class="box" id="boxDefl">
+      <h2>Deflection v(x) &mdash; inches</h2>
+      <canvas id="deflCanvas"></canvas>
+    </div>
+    <p class="caption" style="color:#f5eaea">In every diagram: solid
+    crimson = live simulation, dark dashed = exact closed-form
+    beam-theory solution (instant). Axis ticks give the numeric scale.</p>
     <div class="box">
-      <h2>Beam theory solution (exact, static)</h2>
-      <canvas id="theoryCanvas"></canvas>
-      <p class="caption">The exact solution of the beam equation
-      EIv&#8243;&#8243;=q for the current loads and support positions,
-      solved in closed form &mdash; the dark curve responds
-      <strong>instantly</strong> when you move a slider. The gray curve
-      is the live simulation settling onto it. (Use the
-      &ldquo;Instant&rdquo; toggle to make the whole page use the exact
-      solution with no dynamics at all.)</p>
+      <h2>Check the numbers &mdash; simulation vs. exact</h2>
+      <table class="check-table" id="checkTable">
+        <thead><tr><th></th><th>Simulation</th><th>Exact (theory)</th></tr></thead>
+        <tbody>
+          <tr><td>R<sub>i</sub> (kips)</td><td id="cRiS"></td><td id="cRiT"></td></tr>
+          <tr><td>R<sub>j</sub> (kips)</td><td id="cRjS"></td><td id="cRjT"></td></tr>
+          <tr><td>M<sub>i</sub> (kip&middot;ft)</td><td id="cMiS"></td><td id="cMiT"></td></tr>
+          <tr><td>M<sub>j</sub> (kip&middot;ft)</td><td id="cMjS"></td><td id="cMjT"></td></tr>
+          <tr><td>max |v| (in)</td><td id="cVmS"></td><td id="cVmT"></td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <div>
     <div class="box">
+      <h2>Beam properties (L = 20 ft)</h2>
+      <div class="control-group">
+        <label>Flexural rigidity EI <span class="val" id="valEI">40,000 kip&middot;ft&sup2;</span></label>
+        <input type="range" id="sliderEI" min="10000" max="100000" step="5000" value="40000">
+      </div>
+    </div>
+
+    <div class="box">
       <h2>Loads</h2>
       <div class="control-group">
-        <label>Point load P <span class="val" id="valP">0.0</span></label>
-        <input type="range" id="sliderP" min="-4" max="4" step="0.1" value="0">
+        <label>Point load P <span class="val" id="valP">0.0 kips</span></label>
+        <input type="range" id="sliderP" min="-20" max="20" step="0.5" value="0">
       </div>
       <div class="control-group">
-        <label>P position (along span) <span class="val" id="valXP">50%</span></label>
+        <label>P position from A <span class="val" id="valXP">10.0 ft</span></label>
         <input type="range" id="sliderXP" min="0.05" max="0.95" step="0.01" value="0.5">
       </div>
       <div class="control-group">
-        <label>Uniform load w <span class="val" id="valW">0.0</span></label>
-        <input type="range" id="sliderW" min="-4" max="4" step="0.1" value="0">
+        <label>Uniform load w <span class="val" id="valW">0.0 kips/ft</span></label>
+        <input type="range" id="sliderW" min="-5" max="5" step="0.25" value="0">
       </div>
     </div>
 
@@ -225,12 +250,12 @@ underneath.</p>
           <option value="pinned">Pinned</option>
         </select>
         <div class="control-group">
-          <label>Rotation &theta;<sub>i</sub> <span class="val" id="valThetaI">0.00</span></label>
-          <input type="range" id="sliderThetaI" min="-0.35" max="0.35" step="0.01" value="0">
+          <label>Rotation &theta;<sub>i</sub> <span class="val" id="valThetaI">0.000 rad</span></label>
+          <input type="range" id="sliderThetaI" min="-0.05" max="0.05" step="0.002" value="0">
         </div>
         <div class="control-group">
-          <label>Settlement &Delta;<sub>i</sub> <span class="val" id="valDeltaI">0.00</span></label>
-          <input type="range" id="sliderDeltaI" min="-0.15" max="0.15" step="0.005" value="0">
+          <label>Settlement &Delta;<sub>i</sub> <span class="val" id="valDeltaI">0.0 in</span></label>
+          <input type="range" id="sliderDeltaI" min="-3" max="3" step="0.1" value="0">
         </div>
       </div>
       <h2>Support j (right)</h2>
@@ -240,12 +265,12 @@ underneath.</p>
           <option value="pinned">Pinned</option>
         </select>
         <div class="control-group">
-          <label>Rotation &theta;<sub>j</sub> <span class="val" id="valThetaJ">0.00</span></label>
-          <input type="range" id="sliderThetaJ" min="-0.35" max="0.35" step="0.01" value="0">
+          <label>Rotation &theta;<sub>j</sub> <span class="val" id="valThetaJ">0.000 rad</span></label>
+          <input type="range" id="sliderThetaJ" min="-0.05" max="0.05" step="0.002" value="0">
         </div>
         <div class="control-group">
-          <label>Settlement &Delta;<sub>j</sub> <span class="val" id="valDeltaJ">0.00</span></label>
-          <input type="range" id="sliderDeltaJ" min="-0.15" max="0.15" step="0.005" value="0">
+          <label>Settlement &Delta;<sub>j</sub> <span class="val" id="valDeltaJ">0.0 in</span></label>
+          <input type="range" id="sliderDeltaJ" min="-3" max="3" step="0.1" value="0">
         </div>
       </div>
     </div>
@@ -256,6 +281,10 @@ underneath.</p>
       </div>
       <label class="toggle"><input type="checkbox" id="chkInstant"> Instant &mdash; jump straight to the exact solution (no dynamics)</label>
       <label class="toggle"><input type="checkbox" id="chkSlow"> Slow motion</label>
+      <h2 style="margin-top:10px">Show diagrams</h2>
+      <label class="toggle"><input type="checkbox" id="chkShear" checked> Shear V(x)</label>
+      <label class="toggle"><input type="checkbox" id="chkMoment" checked> Moment M(x)</label>
+      <label class="toggle"><input type="checkbox" id="chkDefl" checked> Deflection v(x)</label>
       <p class="caption" id="substepInfo"></p>
     </div>
   </div>
@@ -270,16 +299,21 @@ CE 430, Fall 2026 — Washington State University
 (function () {
   'use strict';
 
-  const solver = new BeamSolver({ N: 60, L: 1, EI: 1, mLin: 1, zeta: 0.35 });
+  // Real units: length ft, force kips, moment kip*ft, EI kip*ft^2.
+  // (mLin and zeta shape the transient only, not any settled value.)
+  const ZETA = 0.35;
+  const solver = new BeamSolver({ N: 60, L: 20, EI: 40000, mLin: 1, zeta: ZETA });
   solver.setBoundary({ type: 'fixed', theta: 0, delta: 0 }, { type: 'fixed', theta: 0, delta: 0 });
   solver.snapBoundary();
 
   const beamCanvas = document.getElementById('beamCanvas');
-  const curvCanvas = document.getElementById('curvCanvas');
-  const theoryCanvas = document.getElementById('theoryCanvas');
+  const shearCanvas = document.getElementById('shearCanvas');
+  const momentCanvas = document.getElementById('momentCanvas');
+  const deflCanvas = document.getElementById('deflCanvas');
   const beamCtx = beamCanvas.getContext('2d');
-  const curvCtx = curvCanvas.getContext('2d');
-  const theoryCtx = theoryCanvas.getContext('2d');
+  const shearCtx = shearCanvas.getContext('2d');
+  const momentCtx = momentCanvas.getContext('2d');
+  const deflCtx = deflCanvas.getContext('2d');
 
   function fitCanvas(c) {
     const rect = c.getBoundingClientRect();
@@ -293,6 +327,7 @@ CE 430, Fall 2026 — Washington State University
     P: document.getElementById('sliderP'),
     xP: document.getElementById('sliderXP'),
     w: document.getElementById('sliderW'),
+    EI: document.getElementById('sliderEI'),
     typeI: document.getElementById('typeI'),
     thetaI: document.getElementById('sliderThetaI'),
     deltaI: document.getElementById('sliderDeltaI'),
@@ -302,42 +337,53 @@ CE 430, Fall 2026 — Washington State University
     slow: document.getElementById('chkSlow'),
     instant: document.getElementById('chkInstant'),
     reset: document.getElementById('btnReset'),
+    shear: document.getElementById('chkShear'),
+    moment: document.getElementById('chkMoment'),
+    defl: document.getElementById('chkDefl'),
   };
   const out = {
     P: document.getElementById('valP'),
     xP: document.getElementById('valXP'),
     w: document.getElementById('valW'),
+    EI: document.getElementById('valEI'),
     thetaI: document.getElementById('valThetaI'),
     deltaI: document.getElementById('valDeltaI'),
     thetaJ: document.getElementById('valThetaJ'),
     deltaJ: document.getElementById('valDeltaJ'),
     substep: document.getElementById('substepInfo'),
   };
+  const check = {};
+  ['cRiS','cRiT','cRjS','cRjT','cMiS','cMiT','cMjS','cMjT','cVmS','cVmT'].forEach(
+    (id) => { check[id] = document.getElementById(id); });
 
   function updateThetaEnabled() {
     ui.thetaI.disabled = ui.typeI.value !== 'fixed';
     ui.thetaJ.disabled = ui.typeJ.value !== 'fixed';
-    if (ui.typeI.value !== 'fixed') { ui.thetaI.value = 0; out.thetaI.textContent = '0.00'; }
-    if (ui.typeJ.value !== 'fixed') { ui.thetaJ.value = 0; out.thetaJ.textContent = '0.00'; }
+    if (ui.typeI.value !== 'fixed') { ui.thetaI.value = 0; out.thetaI.textContent = '0.000 rad'; }
+    if (ui.typeJ.value !== 'fixed') { ui.thetaJ.value = 0; out.thetaJ.textContent = '0.000 rad'; }
   }
 
   function readControls() {
-    const P = parseFloat(ui.P.value);
-    const xP = parseFloat(ui.xP.value) * solver.L;
-    const w = parseFloat(ui.w.value);
-    out.P.textContent = P.toFixed(1);
-    out.xP.textContent = Math.round(parseFloat(ui.xP.value) * 100) + '%';
-    out.w.textContent = w.toFixed(1);
+    const P = parseFloat(ui.P.value);            // kips
+    const xP = parseFloat(ui.xP.value) * solver.L; // ft
+    const w = parseFloat(ui.w.value);            // kips/ft
+    const EI = parseFloat(ui.EI.value);          // kip*ft^2
+    out.P.textContent = P.toFixed(1) + ' kips';
+    out.xP.textContent = xP.toFixed(1) + ' ft';
+    out.w.textContent = w.toFixed(2) + ' kips/ft';
+    out.EI.textContent = EI.toLocaleString('en-US') + ' kip·ft²';
     solver.setLoad({ P, xP, w });
+    solver.EI = EI;
+    solver.mu = 2 * ZETA * Math.sqrt(EI * solver.mLin); // keep zeta as EI changes
 
-    const thetaI = parseFloat(ui.thetaI.value);
-    const deltaI = parseFloat(ui.deltaI.value);
+    const thetaI = parseFloat(ui.thetaI.value);      // rad
+    const deltaI = parseFloat(ui.deltaI.value) / 12; // in -> ft
     const thetaJ = parseFloat(ui.thetaJ.value);
-    const deltaJ = parseFloat(ui.deltaJ.value);
-    out.thetaI.textContent = thetaI.toFixed(2);
-    out.deltaI.textContent = deltaI.toFixed(2);
-    out.thetaJ.textContent = thetaJ.toFixed(2);
-    out.deltaJ.textContent = deltaJ.toFixed(2);
+    const deltaJ = parseFloat(ui.deltaJ.value) / 12;
+    out.thetaI.textContent = thetaI.toFixed(3) + ' rad';
+    out.deltaI.textContent = (deltaI * 12).toFixed(1) + ' in';
+    out.thetaJ.textContent = thetaJ.toFixed(3) + ' rad';
+    out.deltaJ.textContent = (deltaJ * 12).toFixed(1) + ' in';
 
     solver.setBoundary(
       { type: ui.typeI.value, theta: thetaI, delta: deltaI },
@@ -345,7 +391,14 @@ CE 430, Fall 2026 — Washington State University
     );
   }
 
-  [ui.P, ui.xP, ui.w, ui.thetaI, ui.deltaI, ui.thetaJ, ui.deltaJ].forEach((el) =>
+  function updatePanels() {
+    document.getElementById('boxShear').style.display = ui.shear.checked ? '' : 'none';
+    document.getElementById('boxMoment').style.display = ui.moment.checked ? '' : 'none';
+    document.getElementById('boxDefl').style.display = ui.defl.checked ? '' : 'none';
+  }
+  [ui.shear, ui.moment, ui.defl].forEach((el) => el.addEventListener('change', updatePanels));
+
+  [ui.P, ui.xP, ui.w, ui.EI, ui.thetaI, ui.deltaI, ui.thetaJ, ui.deltaJ].forEach((el) =>
     el.addEventListener('input', readControls)
   );
   [ui.typeI, ui.typeJ].forEach((el) =>
@@ -355,7 +408,7 @@ CE 430, Fall 2026 — Washington State University
     })
   );
   ui.reset.addEventListener('click', () => {
-    ui.P.value = 0; ui.xP.value = 0.5; ui.w.value = 0;
+    ui.P.value = 0; ui.xP.value = 0.5; ui.w.value = 0; ui.EI.value = 40000;
     ui.typeI.value = 'fixed'; ui.thetaI.value = 0; ui.deltaI.value = 0;
     ui.typeJ.value = 'fixed'; ui.thetaJ.value = 0; ui.deltaJ.value = 0;
     updateThetaEnabled();
@@ -363,25 +416,6 @@ CE 430, Fall 2026 — Washington State University
     solver.v.fill(0);
     solver.vel.fill(0);
   });
-
-  // Diverging color scale for curvature: blue (one sense) - near-white
-  // (straight) - red (opposite sense), auto-scaled to the current max
-  // |curvature| along the span each frame.
-  function curvColor(kappa, kMax) {
-    const t = kMax > 1e-9 ? Math.max(-1, Math.min(1, kappa / kMax)) : 0;
-    let r, g, b;
-    if (t >= 0) {
-      r = 245 + t * (192 - 245);
-      g = 245 + t * (57 - 245);
-      b = 240 + t * (42 - 240);
-    } else {
-      const u = -t;
-      r = 245 + u * (43 - 245);
-      g = 245 + u * (108 - 245);
-      b = 240 + u * (176 - 240);
-    }
-    return `rgb(${r | 0},${g | 0},${b | 0})`;
-  }
 
   function drawSupport(ctx, x, y, type, mirrored) {
     ctx.save();
@@ -410,35 +444,51 @@ CE 430, Fall 2026 — Washington State University
     ctx.restore();
   }
 
+  let dispScale = null; // eased px-per-ft for the beam's deflection display
   function draw() {
     const dprB = fitCanvas(beamCanvas);
-    const dprC = fitCanvas(curvCanvas);
     const W = beamCanvas.width, H = beamCanvas.height;
     beamCtx.clearRect(0, 0, W, H);
 
-    const marginX = 60 * dprB, marginY = 40 * dprB;
+    const marginX = 60 * dprB, marginY = 46 * dprB;
     const plotW = W - 2 * marginX, plotH = H - 2 * marginY;
-    const vScale = plotH / 2 / 0.45; // solver v-units -> px; 0.45 gives headroom above the ~0.40 max observed in stress-testing every slider at its extreme simultaneously
-    const xToPx = (x) => marginX + (x / solver.L) * plotW;
-    const vToPx = (v) => marginY + plotH / 2 + v * vScale;
-
-    // curvature-colored beam as a sequence of short segments
-    const kappa = solver.curvature();
     const forces = solver.forces();
-    let kMax = 1e-6;
-    for (let k = 0; k <= solver.N; k++) kMax = Math.max(kMax, Math.abs(kappa[k]));
+    const theory = solver.staticTheory();
 
-    beamCtx.lineWidth = 6 * dprB;
+    // auto-magnified deflection scale (eased so it doesn't jitter),
+    // with the magnification factor displayed for honesty
+    let maxV = 1e-3;
+    for (let k = 0; k <= solver.N; k++)
+      maxV = Math.max(maxV, Math.abs(solver.v[k]), Math.abs(theory.v[k]));
+    const targetScale = (0.38 * plotH) / maxV;
+    dispScale = dispScale === null ? targetScale : dispScale + (targetScale - dispScale) * 0.08;
+    const xToPx = (x) => marginX + (x / solver.L) * plotW;
+    const vToPx = (v) => marginY + plotH / 2 + v * dispScale;
+    const mag = dispScale / (plotW / solver.L);
+    beamCtx.fillStyle = '#888';
+    beamCtx.font = `${11 * dprB}px sans-serif`;
+    beamCtx.fillText('deflection magnified ×' + (mag < 10 ? mag.toFixed(1) : Math.round(mag)), 8 * dprB, 16 * dprB);
+
+    // undeformed reference line
+    beamCtx.strokeStyle = '#ccc';
+    beamCtx.setLineDash([4 * dprB, 4 * dprB]);
+    beamCtx.lineWidth = 1;
+    beamCtx.beginPath();
+    beamCtx.moveTo(xToPx(0), vToPx(0));
+    beamCtx.lineTo(xToPx(solver.L), vToPx(0));
+    beamCtx.stroke();
+    beamCtx.setLineDash([]);
+
+    // beam: plain single-color deformed shape
+    beamCtx.strokeStyle = '#981e32';
+    beamCtx.lineWidth = 5 * dprB;
     beamCtx.lineCap = 'round';
-    for (let k = 0; k < solver.N; k++) {
-      const x0 = (k * solver.L) / solver.N, x1 = ((k + 1) * solver.L) / solver.N;
-      const kAvg = (kappa[k] + kappa[k + 1]) / 2;
-      beamCtx.strokeStyle = curvColor(kAvg, kMax);
-      beamCtx.beginPath();
-      beamCtx.moveTo(xToPx(x0), vToPx(solver.v[k]));
-      beamCtx.lineTo(xToPx(x1), vToPx(solver.v[k + 1]));
-      beamCtx.stroke();
+    beamCtx.beginPath();
+    for (let k = 0; k <= solver.N; k++) {
+      const px = xToPx((k * solver.L) / solver.N), py = vToPx(solver.v[k]);
+      if (k === 0) beamCtx.moveTo(px, py); else beamCtx.lineTo(px, py);
     }
+    beamCtx.stroke();
 
     // supports
     drawSupport(beamCtx, xToPx(0), vToPx(solver.v[0]), solver.endI.type, false);
@@ -451,7 +501,7 @@ CE 430, Fall 2026 — Washington State University
     beamCtx.fillStyle = FORCE;
     beamCtx.font = `${12 * dprB}px sans-serif`;
     function momentArc(xPix, yPix, M, label) {
-      if (Math.abs(M) < 5e-3) return;
+      if (Math.abs(M) < 0.5) return; // kip·ft display threshold
       const r = 22 * dprB;
       // sagging-positive M shown at the ends: draw the couple the support
       // applies; arc sweep direction flips with the sign of M.
@@ -468,11 +518,11 @@ CE 430, Fall 2026 — Washington State University
       beamCtx.lineTo(ax, ay);
       beamCtx.lineTo(ax + 7 * dprB * Math.cos(tang + 0.45), ay + 7 * dprB * Math.sin(tang + 0.45));
       beamCtx.stroke();
-      beamCtx.fillText(`${label} = ${M.toFixed(2)}`, xPix - 20 * dprB, yPix - r - 8 * dprB);
+      beamCtx.fillText(`${label} = ${M.toFixed(1)} kip·ft`, xPix - 24 * dprB, yPix - r - 8 * dprB);
     }
     function reactionArrow(xPix, yPix, R, label) {
-      if (Math.abs(R) < 5e-3) return;
-      const len = Math.min(46, 18 + 28 * Math.abs(R)) * dprB;
+      if (Math.abs(R) < 0.25) return; // kips display threshold
+      const len = Math.min(46, 18 + 0.6 * Math.abs(R)) * dprB;
       const dir = R > 0 ? -1 : 1; // upward reaction drawn pointing up (canvas -y)
       const yTail = yPix + 24 * dprB - dir * 0; // start below the support
       beamCtx.lineWidth = 2.5 * dprB;
@@ -486,7 +536,7 @@ CE 430, Fall 2026 — Washington State University
       beamCtx.lineTo(xPix, yHead);
       beamCtx.lineTo(xPix + 5 * dprB, yHead - dir * 7 * dprB);
       beamCtx.stroke();
-      beamCtx.fillText(`${label} = ${R.toFixed(2)}`, xPix + 8 * dprB, yTail + len + 12 * dprB);
+      beamCtx.fillText(`${label} = ${R.toFixed(1)} kips`, xPix + 8 * dprB, yTail + len + 12 * dprB);
     }
     momentArc(xToPx(0), vToPx(solver.v[0]), forces.Mi, 'Mᵢ');
     momentArc(xToPx(solver.L), vToPx(solver.v[solver.N]), forces.Mj, 'Mⱼ');
@@ -535,90 +585,75 @@ CE 430, Fall 2026 — Washington State University
       }
     }
 
-    // --- bending moment diagram M(x) ---
-    const Mx = forces.M;
-    let mMax = 1e-6;
-    for (let k = 0; k <= solver.N; k++) mMax = Math.max(mMax, Math.abs(Mx[k]));
-    const Wc = curvCanvas.width, Hc = curvCanvas.height;
-    curvCtx.clearRect(0, 0, Wc, Hc);
-    const mX = 40 * dprC, mY = 16 * dprC;
-    const pW = Wc - 2 * mX, pH = Hc - 2 * mY;
-    const xToPxC = (x) => mX + (x / solver.L) * pW;
-    const mToPxC = (mv) => mY + pH / 2 - (mv / mMax) * (pH / 2 - 6 * dprC);
-
-    curvCtx.strokeStyle = '#bbb';
-    curvCtx.setLineDash([4 * dprC, 4 * dprC]);
-    curvCtx.beginPath();
-    curvCtx.moveTo(mX, mY + pH / 2);
-    curvCtx.lineTo(mX + pW, mY + pH / 2);
-    curvCtx.stroke();
-    curvCtx.setLineDash([]);
-
-    curvCtx.lineWidth = 3 * dprC;
-    for (let k = 0; k < solver.N; k++) {
-      const x0 = (k * solver.L) / solver.N, x1 = ((k + 1) * solver.L) / solver.N;
-      // hue keyed to curvature (= -M/EI) so the diagram's colors match
-      // the beam's coloring at the same x
-      const kAvg = (kappa[k] + kappa[k + 1]) / 2;
-      curvCtx.strokeStyle = curvColor(kAvg, kMax);
-      curvCtx.beginPath();
-      curvCtx.moveTo(xToPxC(x0), mToPxC(Mx[k]));
-      curvCtx.lineTo(xToPxC(x1), mToPxC(Mx[k + 1]));
-      curvCtx.stroke();
+    // --- diagrams: shear V(x), moment M(x), deflection v(x) ---
+    // each: solid crimson = simulation, dark dashed = exact theory,
+    // numeric y-axis ticks so values can be read off and checked
+    const diagScales = draw._scales || (draw._scales = {});
+    function diagram(canvas, ctx, key, sim, th, fmt, downPositive) {
+      const dpr = fitCanvas(canvas);
+      const Wd = canvas.width, Hd = canvas.height;
+      ctx.clearRect(0, 0, Wd, Hd);
+      const mX = 64 * dpr, mY = 14 * dpr;
+      const pW = Wd - mX - 16 * dpr, pH = Hd - 2 * mY;
+      let amax = 1e-9;
+      for (let k = 0; k < sim.length; k++) amax = Math.max(amax, Math.abs(sim[k]), Math.abs(th[k]));
+      amax *= 1.15;
+      amax = Math.max(amax, key === 'v' ? 0.02 : 0.5); // display floor
+      const prev = diagScales[key];
+      const scale = (diagScales[key] = prev ? prev + (amax - prev) * 0.15 : amax);
+      const sgn = downPositive ? 1 : -1; // deflection drawn down-positive
+      const xPx = (k) => mX + (k / solver.N) * pW;
+      const yPx = (val) => mY + pH / 2 + sgn * (val / scale) * (pH / 2);
+      // gridlines + numeric ticks so the result is checkable
+      ctx.font = `${10 * dpr}px sans-serif`;
+      for (const f of [-1, -0.5, 0, 0.5, 1]) {
+        const val = f * scale, y = yPx(val);
+        ctx.strokeStyle = f === 0 ? '#999' : '#e6e6e6';
+        ctx.setLineDash(f === 0 ? [4 * dpr, 4 * dpr] : []);
+        ctx.beginPath(); ctx.moveTo(mX, y); ctx.lineTo(mX + pW, y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#777';
+        ctx.fillText(fmt(val), 6 * dpr, y + 3 * dpr);
+      }
+      // live simulation
+      ctx.strokeStyle = '#981e32';
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.beginPath();
+      for (let k = 0; k < sim.length; k++) {
+        if (k === 0) ctx.moveTo(xPx(k), yPx(sim[k])); else ctx.lineTo(xPx(k), yPx(sim[k]));
+      }
+      ctx.stroke();
+      // exact beam-theory solution, dashed dark (instant)
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 1.4 * dpr;
+      ctx.setLineDash([5 * dpr, 4 * dpr]);
+      ctx.beginPath();
+      for (let k = 0; k < th.length; k++) {
+        if (k === 0) ctx.moveTo(xPx(k), yPx(th[k])); else ctx.lineTo(xPx(k), yPx(th[k]));
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-    curvCtx.fillStyle = '#666';
-    curvCtx.font = `${11 * dprC}px sans-serif`;
-    curvCtx.fillText('M(x), sagging positive', mX, mY + 4 * dprC);
+    const fmt1 = (v) => v.toFixed(1), fmt2 = (v) => v.toFixed(2);
+    if (ui.shear.checked) diagram(shearCanvas, shearCtx, 'V', forces.V, theory.V, fmt1, false);
+    if (ui.moment.checked) diagram(momentCanvas, momentCtx, 'M', forces.M, theory.M, fmt1, false);
+    if (ui.defl.checked) {
+      const simIn = solver.v.map((x) => x * 12), thIn = theory.v.map((x) => x * 12);
+      diagram(deflCanvas, deflCtx, 'v', simIn, thIn, fmt2, true);
+    }
 
-    // beam-theory M(x) overlaid as a thin dark dashed curve
-    const theory = solver.staticTheory();
-    curvCtx.strokeStyle = '#333';
-    curvCtx.lineWidth = 1.2 * dprC;
-    curvCtx.setLineDash([5 * dprC, 4 * dprC]);
-    curvCtx.beginPath();
+    // --- check-the-numbers table (simulation vs exact) ---
+    const RiT = theory.V[0], RjT = -theory.V[solver.N];
+    let vmS = 0, vmT = 0;
     for (let k = 0; k <= solver.N; k++) {
-      const px = xToPxC((k * solver.L) / solver.N), py = mToPxC(theory.M[k]);
-      if (k === 0) curvCtx.moveTo(px, py); else curvCtx.lineTo(px, py);
+      vmS = Math.max(vmS, Math.abs(solver.v[k]));
+      vmT = Math.max(vmT, Math.abs(theory.v[k]));
     }
-    curvCtx.stroke();
-    curvCtx.setLineDash([]);
-
-    // --- beam-theory panel: exact static shape vs live simulation ---
-    const dprT = fitCanvas(theoryCanvas);
-    const Wt = theoryCanvas.width, Ht = theoryCanvas.height;
-    theoryCtx.clearRect(0, 0, Wt, Ht);
-    const mXt = 60 * dprT, mYt = 30 * dprT;
-    const pWt = Wt - 2 * mXt, pHt = Ht - 2 * mYt;
-    const xToPxT = (x) => mXt + (x / solver.L) * pWt;
-    const vToPxT = (v) => mYt + pHt / 2 + v * (pHt / 2 / 0.45);
-    theoryCtx.strokeStyle = '#ddd';
-    theoryCtx.lineWidth = 1;
-    theoryCtx.beginPath();
-    theoryCtx.moveTo(mXt, mYt + pHt / 2);
-    theoryCtx.lineTo(mXt + pWt, mYt + pHt / 2);
-    theoryCtx.stroke();
-    // live simulation shape (gray)
-    theoryCtx.strokeStyle = '#b5b5b5';
-    theoryCtx.lineWidth = 4 * dprT;
-    theoryCtx.lineCap = 'round';
-    theoryCtx.beginPath();
-    for (let k = 0; k <= solver.N; k++) {
-      const px = xToPxT((k * solver.L) / solver.N), py = vToPxT(solver.v[k]);
-      if (k === 0) theoryCtx.moveTo(px, py); else theoryCtx.lineTo(px, py);
-    }
-    theoryCtx.stroke();
-    // exact beam-theory shape (dark)
-    theoryCtx.strokeStyle = '#1a1a1a';
-    theoryCtx.lineWidth = 1.8 * dprT;
-    theoryCtx.beginPath();
-    for (let k = 0; k <= solver.N; k++) {
-      const px = xToPxT((k * solver.L) / solver.N), py = vToPxT(theory.v[k]);
-      if (k === 0) theoryCtx.moveTo(px, py); else theoryCtx.lineTo(px, py);
-    }
-    theoryCtx.stroke();
-    theoryCtx.fillStyle = '#666';
-    theoryCtx.font = `${11 * dprT}px sans-serif`;
-    theoryCtx.fillText('dark: exact beam theory   gray: live simulation', mXt, mYt - 8 * dprT);
+    check.cRiS.textContent = forces.Ri.toFixed(2); check.cRiT.textContent = RiT.toFixed(2);
+    check.cRjS.textContent = forces.Rj.toFixed(2); check.cRjT.textContent = RjT.toFixed(2);
+    check.cMiS.textContent = forces.Mi.toFixed(1); check.cMiT.textContent = theory.M[0].toFixed(1);
+    check.cMjS.textContent = forces.Mj.toFixed(1); check.cMjT.textContent = theory.M[solver.N].toFixed(1);
+    check.cVmS.textContent = (vmS * 12).toFixed(2); check.cVmT.textContent = (vmT * 12).toFixed(2);
   }
 
   let lastT = null;
@@ -646,6 +681,7 @@ CE 430, Fall 2026 — Washington State University
   }
 
   updateThetaEnabled();
+  updatePanels();
   readControls();
   window.addEventListener('resize', draw);
   requestAnimationFrame(frame);

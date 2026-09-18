@@ -219,9 +219,12 @@ class BeamSolver {
     const kappa = this.curvature();
     const { N, h, EI } = this;
     const M = kappa.map((k) => -EI * k);
-    const Vi = (-3 * M[0] + 4 * M[1] - M[2]) / (2 * h);
-    const Vj = (3 * M[N] - 4 * M[N - 1] + M[N - 2]) / (2 * h);
-    return { M, Mi: M[0], Mj: M[N], Ri: Vi, Rj: -Vj };
+    // shear V(x) = dM/dx: central differences inside, one-sided at ends
+    const V = new Array(N + 1);
+    V[0] = (-3 * M[0] + 4 * M[1] - M[2]) / (2 * h);
+    V[N] = (3 * M[N] - 4 * M[N - 1] + M[N - 2]) / (2 * h);
+    for (let k = 1; k <= N - 1; k++) V[k] = (M[k + 1] - M[k - 1]) / (2 * h);
+    return { M, V, Mi: M[0], Mj: M[N], Ri: V[0], Rj: -V[N] };
   }
 
   // Exact STATIC beam-theory solution for the current loads/boundaries:
@@ -272,15 +275,18 @@ class BeamSolver {
     }
     const sol = rhs.map((b, k) => b / rows[k][k]);
     const A = sol.slice(0, 4), B = sol.slice(4, 8);
-    const v = new Array(N + 1), M = new Array(N + 1);
+    const v = new Array(N + 1), M = new Array(N + 1), V = new Array(N + 1);
     for (let k = 0; k <= N; k++) {
       const x = (k * L) / N;
       const C = x <= a ? A : B;
       v[k] = C[0] + C[1] * x + C[2] * x * x + C[3] * x ** 3 + part(x);
       const vpp = 2 * C[2] + 6 * C[3] * x + part2(x);
       M[k] = -EI * vpp;
+      // shear V = dM/dx = -EI v''' (exact, piecewise linear with a
+      // jump of -P at the point load)
+      V[k] = -EI * (6 * C[3]) - w * x;
     }
-    return { v, M };
+    return { v, M, V };
   }
 }
 
